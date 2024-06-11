@@ -1,3 +1,4 @@
+import 'package:eavell/perkenalan.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -6,10 +7,10 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future.delayed(Duration(seconds: 3), () {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => PerkenalanSatu()),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PerkenalanSatu()),
+      );
     });
     return Container(
       constraints: BoxConstraints.expand(), // Set constraints to expand

@@ -55,7 +55,6 @@ class _PaketTravelState extends State<PaketTravel> {
         ),
       ),
       body: Center(
-        child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start, // Posisi di bagian atas
             crossAxisAlignment: CrossAxisAlignment.center, // Tengah secara horizontal
@@ -84,10 +83,9 @@ class _PaketTravelState extends State<PaketTravel> {
             ],
           ),
         ),
-      ),
-    );
+      );
+    }
   }
-}
 
 class TravelPackageCard extends StatelessWidget {
   final String imagePath;

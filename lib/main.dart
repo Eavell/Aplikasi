@@ -1,4 +1,5 @@
 
+import 'package:eavell/PaketTravel.dart';
 import 'package:eavell/splashScreen.dart';
 import 'package:flutter/material.dart';
 
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: SplashScreen(),
+      home: PaketTravel(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:eavell/perkenalan.dart';
 import 'package:flutter/material.dart';
 
 class PaketTravel extends StatefulWidget {
@@ -28,7 +29,7 @@ class _PaketTravelState extends State<PaketTravel> {
               color: Colors.white, // Mengubah warna ikon menjadi putih
               iconSize: 28, // Ukuran ikon
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.push( context, MaterialPageRoute(builder: (context) => Beranda()),);
               },
             ),
           ),
@@ -54,14 +55,19 @@ class _PaketTravelState extends State<PaketTravel> {
       ),
 
         body: Center(
+        child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start, // Posisi di bagian atas
             crossAxisAlignment: CrossAxisAlignment.center, // Tengah secara horizontal
             children: [
+
               SizedBox(height: 13),
               Stack(
                 children: [
                   Material(
+                    elevation: 5,
+                    shadowColor: Colors.black26,
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: 304,
                       height: 225,
@@ -77,7 +83,7 @@ class _PaketTravelState extends State<PaketTravel> {
                       ),
                       child: ElevatedButton(
                         onPressed: () {
-                        // Navigator.push( context, MaterialPageRoute(builder: (context) => RiwayatArus()),);
+                          Navigator.push( context, MaterialPageRoute(builder: (context) => PaketDiamond()),);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white, // Warna latar belakang
@@ -130,11 +136,14 @@ class _PaketTravelState extends State<PaketTravel> {
                   ),
                 ],
               ),
-              SizedBox(height: 20), // Jarak antara Box 1 dan Box 2
 
+              SizedBox(height: 20), // Jarak antara Box 1 dan Box 2
               Stack(
                 children: [
                   Material(
+                    elevation: 5,
+                    shadowColor: Colors.black26,
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: 304,
                       height: 225,
@@ -150,7 +159,7 @@ class _PaketTravelState extends State<PaketTravel> {
                       ),
                       child: ElevatedButton(
                         onPressed: () {
-                        // Navigator.push( context, MaterialPageRoute(builder: (context) => RiwayatArus()),);
+                          Navigator.push( context, MaterialPageRoute(builder: (context) => PaketGold()),);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white, // Warna latar belakang
@@ -203,11 +212,14 @@ class _PaketTravelState extends State<PaketTravel> {
                   ),
                 ],
               ),
-              SizedBox(height: 20), // Jarak antara Box 2 dan Box 3
 
+              SizedBox(height: 20), // Jarak antara Box 2 dan Box 3
               Stack(
                 children: [
                   Material(
+                    elevation: 5,
+                    shadowColor: Colors.black26,
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: 304,
                       height: 225,
@@ -223,7 +235,7 @@ class _PaketTravelState extends State<PaketTravel> {
                       ),
                       child: ElevatedButton(
                         onPressed: () {
-                        // Navigator.push( context, MaterialPageRoute(builder: (context) => RiwayatArus()),);
+                          Navigator.push( context, MaterialPageRoute(builder: (context) => PaketSilver()),);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white, // Warna latar belakang
@@ -279,6 +291,7 @@ class _PaketTravelState extends State<PaketTravel> {
             ],
           ),
         ),
+      ),
     );
   }
 }

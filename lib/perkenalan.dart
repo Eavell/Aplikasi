@@ -61,7 +61,7 @@ class _PerkenalanSatuState extends State<PerkenalanSatu> {
       ),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: 27,
+          horizontal: 45,
           vertical: 23,
         ),
         child: Column(
@@ -88,7 +88,7 @@ class _PerkenalanSatuState extends State<PerkenalanSatu> {
         children: [
           Container(
             padding: EdgeInsets.symmetric(
-              horizontal: 27,
+              horizontal: 45,
               vertical: 23,
             ),
             child: Column(
@@ -101,7 +101,7 @@ class _PerkenalanSatuState extends State<PerkenalanSatu> {
           ),
           Positioned(
             bottom: 35,
-            right: 40,
+            right: 60,
             child: ElevatedButton(
               onPressed: () {
                 // Navigator.pushReplacement(

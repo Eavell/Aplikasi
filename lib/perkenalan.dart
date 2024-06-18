@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+// import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
 
 class PerkenalanSatu extends StatefulWidget {
@@ -103,14 +104,18 @@ class _PerkenalanSatuState extends State<PerkenalanSatu> {
             right: 40,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/login');
+                // Navigator.pushReplacement(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => const Beranda()),
+                // );
               },
-              
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF69857C), // Warna latar belakang tombol
+                backgroundColor:
+                    Color(0xFF69857C), // Warna latar belakang tombol
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
-              ),),
+                ),
+              ),
               child: Text(
                 'Mulai',
                 style: TextStyle(color: Colors.white),

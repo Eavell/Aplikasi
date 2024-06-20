@@ -1,5 +1,7 @@
 import 'dart:ui';
+// import 'package:eavell/beranda.dart';
 import 'package:eavell/beranda.dart';
+import 'package:eavell/daftar.dart';
 import 'package:flutter/material.dart';
 
 class Perkenalan extends StatefulWidget {
@@ -114,7 +116,7 @@ class _PerkenalanState extends State<Perkenalan> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const Beranda()),
+                  MaterialPageRoute(builder: (context) => const Daftar()),
                 );
               },
               style: ElevatedButton.styleFrom(

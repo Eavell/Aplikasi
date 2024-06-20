@@ -1,4 +1,4 @@
-import 'package:eavell/beranda.dart';
+// import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
 
 class PaketTravel extends StatefulWidget {
@@ -30,7 +30,7 @@ class _PaketTravelState extends State<PaketTravel> {
                   color: Colors.white, // Mengubah warna ikon menjadi putih
                   iconSize: screenWidth * 0.07, // Ukuran ikon
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => Beranda()),);
+                    // Navigator.push(context, MaterialPageRoute(builder: (context) => Beranda()),);
                   },
                 ),
               ),

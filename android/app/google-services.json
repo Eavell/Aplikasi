@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "361090895507",
+    "project_id": "trip-nest-d599a",
+    "storage_bucket": "trip-nest-d599a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:361090895507:android:4c205d44356017997a0766",
+        "android_client_info": {
+          "package_name": "com.example.eavell"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD764uWuip-eYMILzdJqCsObzBWCzT1I5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,6 @@
 import 'package:eavell/masuk.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Impor package Firebase Storage
 
 class Daftar extends StatefulWidget {
   const Daftar({super.key});
@@ -12,33 +13,60 @@ class _DaftarState extends State<Daftar> {
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  bool _isObscure = true; // Variabel untuk melacak apakah password tersembunyi atau tidak
+  bool _isObscure = true;
   bool _isUsernameFocused = false;
   bool _isemailFocused = false;
   bool _isPasswordFocused = false;
+  // Variable untuk menyimpan URL gambar latar
+  String? bgImageUrl; // Mengubah menjadi nullable
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBackgroundImage();
+  }
+
+  // Fungsi untuk memuat gambar latar dari Firebase Storage
+  Future<void> _loadBackgroundImage() async {
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('bg login.png'); // Pastikan path sesuai
+      String url = await ref.getDownloadURL();
+      setState(() {
+        bgImageUrl = url; // Mengatur URL gambar yang diambil
+      });
+    } catch (e) {
+      print('Error loading background image: $e');
+    }
+  }
+
+  // Remainder of your code...
   void _togglePasswordVisibility() {
     setState(() {
       _isPasswordFocused = !_isPasswordFocused;
     });
   }
 
-  // nyimpan error message
-  String _errorMessage = '';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/bg login.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          // Gunakan Image.network untuk menampilkan gambar dari Firebase
+          bgImageUrl == null // Memastikan bgImageUrl sudah dimuat
+              ? Center(
+                  child:
+                      CircularProgressIndicator()) // Menampilkan loader saat loading
+              : Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(
+                          bgImageUrl!), // Gunakan URL dari Firebase Storage
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ), // Tampilkan indikator loading saat mengambil gambar
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,

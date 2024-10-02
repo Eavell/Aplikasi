@@ -1,6 +1,30 @@
-import 'package:eavell/masuk.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Impor package Firebase Storage
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Tambahkan import Firebase Storage
+import 'package:eavell/masuk.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Firebase Auth',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const Daftar(),
+    );
+  }
+}
 
 class Daftar extends StatefulWidget {
   const Daftar({super.key});
@@ -17,34 +41,66 @@ class _DaftarState extends State<Daftar> {
   bool _isUsernameFocused = false;
   bool _isemailFocused = false;
   bool _isPasswordFocused = false;
-  // Variable untuk menyimpan URL gambar latar
-  String? bgImageUrl; // Mengubah menjadi nullable
+  String _backgroundImageUrl = ''; // Variabel untuk menyimpan URL latar belakang
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _loadBackgroundImage();
+    _loadBackgroundImage(); // Memanggil method untuk mengambil gambar latar belakang
   }
 
-  // Fungsi untuk memuat gambar latar dari Firebase Storage
+  // Method untuk mengambil URL gambar dari Firebase Storage
   Future<void> _loadBackgroundImage() async {
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('bg login.png'); // Pastikan path sesuai
-      String url = await ref.getDownloadURL();
+      // Mengambil URL dari Firebase Storage
+      String url = await FirebaseStorage.instance
+          .ref('bg login.png')
+          .getDownloadURL();
+
       setState(() {
-        bgImageUrl = url; // Mengatur URL gambar yang diambil
+        _backgroundImageUrl = url;
       });
     } catch (e) {
-      print('Error loading background image: $e');
+      setState(() {
+        _errorMessage = 'Gagal memuat gambar latar belakang.';
+      });
     }
   }
 
-  // Remainder of your code...
+  // Method untuk registrasi menggunakan Firebase Authentication
+  Future<void> _registerWithEmailPassword() async {
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Masuk()),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'email-already-in-use') {
+          _errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain.';
+        } else if (e.code == 'invalid-email') {
+          _errorMessage = 'Format email tidak valid.';
+        } else {
+          _errorMessage = e.message ?? 'Terjadi kesalahan. Silakan coba lagi.';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+      });
+    }
+  }
+
   void _togglePasswordVisibility() {
     setState(() {
-      _isPasswordFocused = !_isPasswordFocused;
+      _isObscure = !_isObscure;
     });
   }
 
@@ -53,47 +109,47 @@ class _DaftarState extends State<Daftar> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gunakan Image.network untuk menampilkan gambar dari Firebase
-          bgImageUrl == null // Memastikan bgImageUrl sudah dimuat
-              ? Center(
-                  child:
-                      CircularProgressIndicator()) // Menampilkan loader saat loading
-              : Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(
-                          bgImageUrl!), // Gunakan URL dari Firebase Storage
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ), // Tampilkan indikator loading saat mengambil gambar
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.topCenter, // Atur posisi vertikal sesuai kebutuhan
-                  
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 105), // Atur padding sesuai kebutuhan
-                    child: Text(
-                      'Daftar',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+          // Tampilkan gambar latar jika URL sudah diambil
+          if (_backgroundImageUrl.isNotEmpty)
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(_backgroundImageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            )
+          else
+            Center(
+              child: CircularProgressIndicator(), // Tampilkan loading jika gambar belum diambil
+            ),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 100.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        'Daftar',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
-        
+                  SizedBox(height: 20),
                   Column(
                     children: [
                       Align(
-                        alignment: Alignment.topLeft, // Atur posisi vertikal sesuai kebutuhan
+                        alignment: Alignment.topLeft,
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 35.0, left: 25), // Atur padding sesuai kebutuhan
+                          padding: const EdgeInsets.only(top: 35.0, left: 25),
                           child: Text(
                             'Nama',
                             style: TextStyle(
@@ -106,41 +162,42 @@ class _DaftarState extends State<Daftar> {
                       ),
                       Container(
                         width: 340,
-                        height: 43, // Memastikan TextField mengikuti lebar Container induknya
+                        height: 43,
                         child: TextField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: _isUsernameFocused ? null : 'Masukkan Nama Anda',
+                            labelText: _isUsernameFocused
+                                ? null
+                                : 'Masukkan Nama Anda',
                             labelStyle: TextStyle(
-                             color: Color(0xFFA0A1A8), // Warna teks label (placeholder)
+                              color: Color(0xFFA0A1A8),
                             ),
                             alignLabelWithHint: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 35.0, horizontal: 10),
-                            fillColor: Colors.white, // Warna latar belakang kolom username
-                            filled: true, // Mengaktifkan latar belakang berwarna
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 35.0, horizontal: 10),
+                            fillColor: Colors.white,
+                            filled: true,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6.0),
-                              borderSide: BorderSide(color: Colors.white), // Ubah warna border
+                              borderSide: BorderSide(color: Colors.white),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6.0),
-                              borderSide: BorderSide(color: Colors.white), // Ubah warna border
+                              borderSide: BorderSide(color: Colors.white),
                             ),
                             floatingLabelBehavior: FloatingLabelBehavior.never,
                           ),
                           onChanged: (value) {
                             setState(() {
-                              // Ketika ada perubahan teks, perbarui status _isUsernameFocused
                               _isUsernameFocused = value.isNotEmpty;
                             });
                           },
                         ),
                       ),
-
                       Align(
-                        alignment: Alignment.topLeft, // Atur posisi vertikal sesuai kebutuhan
+                        alignment: Alignment.topLeft,
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 25.0, left: 25), // Atur padding sesuai kebutuhan
+                          padding: const EdgeInsets.only(top: 25.0, left: 25),
                           child: Text(
                             'Email',
                             style: TextStyle(
@@ -153,31 +210,33 @@ class _DaftarState extends State<Daftar> {
                       ),
                       Container(
                         width: 340,
-                        height: 43, // Memastikan TextField mengikuti lebar Container induknya
+                        height: 43,
                         child: TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            labelText: _isemailFocused ? null : 'Masukkan Email Anda',
+                            labelText: _isemailFocused
+                                ? null
+                                : 'Masukkan Email Anda',
                             labelStyle: TextStyle(
-                             color: Color(0xFFA0A1A8), // Warna teks label (placeholder)
+                              color: Color(0xFFA0A1A8),
                             ),
                             alignLabelWithHint: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 35.0, horizontal: 10),
-                            fillColor: Colors.white, // Warna latar belakang kolom username
-                            filled: true, // Mengaktifkan latar belakang berwarna
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 35.0, horizontal: 10),
+                            fillColor: Colors.white,
+                            filled: true,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6.0),
-                              borderSide: BorderSide(color: Colors.white), // Ubah warna border
+                              borderSide: BorderSide(color: Colors.white),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6.0),
-                              borderSide: BorderSide(color: Colors.white), // Ubah warna border
+                              borderSide: BorderSide(color: Colors.white),
                             ),
                             floatingLabelBehavior: FloatingLabelBehavior.never,
                           ),
                           onChanged: (value) {
                             setState(() {
-                              // Ketika ada perubahan teks, perbarui status _isemailFocused
                               _isemailFocused = value.isNotEmpty;
                             });
                           },
@@ -185,9 +244,9 @@ class _DaftarState extends State<Daftar> {
                       ),
                       SizedBox(height: 10),
                       Align(
-                        alignment: Alignment.topLeft, // Atur posisi vertikal sesuai kebutuhan
+                        alignment: Alignment.topLeft,
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 15.0, left: 25), // Atur padding sesuai kebutuhan
+                          padding: const EdgeInsets.only(top: 15.0, left: 25),
                           child: Text(
                             'Kata Sandi',
                             style: TextStyle(
@@ -199,49 +258,52 @@ class _DaftarState extends State<Daftar> {
                         ),
                       ),
                       Container(
-                  width: 340,
-                  height: 43, // Memastikan TextField mengikuti lebar Container induknya
-                  child: TextField(
-                    controller: _passwordController,
-                    obscureText: _isObscure,
-                    decoration: InputDecoration(
-                      labelText: _isPasswordFocused ? null : 'Masukkan Kata Sandi Anda',
-                      labelStyle: TextStyle(
-                        color: Color(0xFFA0A1A8), // Warna teks label (placeholder)
-                      ),
-                      alignLabelWithHint: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10), // Disesuaikan padding vertical
-                      fillColor: Colors.white, // Warna latar belakang kolom username
-                      filled: true, // Mengaktifkan latar belakang berwarna
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6.0),
-                        borderSide: BorderSide(color: Colors.white), // Ubah warna border
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6.0),
-                        borderSide: BorderSide(color: Colors.white), // Ubah warna border
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isObscure ? Icons.visibility : Icons.visibility_off,
+                        width: 340,
+                        height: 43,
+                        child: TextField(
+                          controller: _passwordController,
+                          obscureText: _isObscure,
+                          decoration: InputDecoration(
+                            labelText: _isPasswordFocused
+                                ? null
+                                : 'Masukkan Kata Sandi Anda',
+                            labelStyle: TextStyle(
+                              color: Color(0xFFA0A1A8),
+                            ),
+                            alignLabelWithHint: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 10.0, horizontal: 10),
+                            fillColor: Colors.white,
+                            filled: true,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6.0),
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6.0),
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isObscure
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isObscure = !_isObscure;
+                                });
+                              },
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _isPasswordFocused = value.isNotEmpty;
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isObscure = !_isObscure; // Mengubah nilai _isObscure
-                          });
-                        },
                       ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        // Ketika ada perubahan teks, perbarui status _isPasswordFocused
-                        _isPasswordFocused = value.isNotEmpty;
-                      });
-                    },
-                  ),
-                ),
-              
                       SizedBox(height: 210),
                       Container(
                         width: 180,
@@ -308,7 +370,9 @@ class _DaftarState extends State<Daftar> {
                       ),
                     ],
                   ),
-              ],
+                  
+                ],
+              ),
             ),
           ),
         ],

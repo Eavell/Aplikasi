@@ -49,7 +49,10 @@ class _SplashScreenState extends State<SplashScreen> {
         gradient: LinearGradient(
           begin: Alignment(0.85, 0.08),
           end: Alignment(0.09, 0.98),
-          colors: [Colors.lightBlue[100]!, Colors.lightBlue[300]!],
+          colors: [
+          Color(0xFFA9DDF3), // Warna hex light blue #B3E5FC
+          Color(0xFF5EB2DC), // Warna hex darker blue #0288D1
+        ],
         ),
       ),
       child: Stack(

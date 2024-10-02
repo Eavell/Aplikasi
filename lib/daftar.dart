@@ -313,32 +313,35 @@ class _DaftarState extends State<Daftar> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black26,
-                              offset: Offset(0, 4), // Mengatur offset bayangan (x, y)
-                              blurRadius: 5, // Mengatur blur radius dari bayangan
-                              spreadRadius: 1, // Mengatur penyebaran bayangan
+                              offset: Offset(0, 4),
+                              blurRadius: 5,
+                              spreadRadius: 1,
                             ),
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => Masuk()),);
+                          onPressed: () async {
+                            // Memanggil fungsi registrasi
+                            await _registerWithEmailPassword(); // Pendaftaran berhasil akan mengarahkan ke halaman login
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white, // Warna latar belakang tombol
+                            backgroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            padding: EdgeInsets.all(10), // Padding di dalam tombol
+                            padding: EdgeInsets.all(10),
                           ),
-                          child: Text('Daftar',
-                          style: TextStyle(
-                            color: Color(0xFF1097D0), // Warna teks
-                            fontSize:24, // Ukuran font
-                            fontWeight: FontWeight.bold
-                          ),
+                          child: Text(
+                            'Daftar',
+                            style: TextStyle(
+                              color: Color(0xFF1097D0),
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
+
 
                       Align(
                         child: Row(                   

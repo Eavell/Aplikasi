@@ -3,6 +3,7 @@ import 'package:eavell/daftar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // Import untuk cache image
 
 class Masuk extends StatefulWidget {
   const Masuk({super.key});
@@ -76,16 +77,18 @@ class _MasukState extends State<Masuk> {
     return Scaffold(
       body: Stack(
         children: [
-          // Memuat latar belakang dari Firebase Storage
+          // Menggunakan CachedNetworkImage untuk background image
           bgImageUrl == null
               ? Center(child: CircularProgressIndicator()) // Loader saat memuat
-              : Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(bgImageUrl!), // Gambar dari Firebase Storage
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+              : CachedNetworkImage(
+                  imageUrl: bgImageUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholder: (context, url) =>
+                      Center(child: CircularProgressIndicator()), // Loader saat memuat
+                  errorWidget: (context, url, error) =>
+                      Center(child: Icon(Icons.error)), // Error widget jika ada kesalahan
                 ),
           SingleChildScrollView(
             child: Padding(

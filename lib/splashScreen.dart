@@ -1,6 +1,7 @@
 import 'package:eavell/perkenalan.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Hanya import firebase_storage
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // Import untuk caching gambar
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -10,7 +11,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String imageUrl = 'https://firebasestorage.googleapis.com/v0/b/trip-nest-d599a.appspot.com/o/Splash.png?alt=media&token=86509ca2-efa2-46b2-8df6-79bb48cdcccb'; // URL gambar dari Firebase
+  String imageUrl = ''; // URL gambar dari Firebase
 
   @override
   void initState() {
@@ -19,7 +20,9 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(Duration(seconds: 3), () {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Perkenalan()), // Navigasi ke halaman berikutnya
+        MaterialPageRoute(
+            builder: (context) =>
+                Perkenalan()), // Navigasi ke halaman berikutnya
       );
     });
   }
@@ -29,10 +32,10 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       // Referensi ke gambar di Firebase Storage
       final ref = FirebaseStorage.instance.ref().child('Splash.png');
-      
+
       // Ambil URL gambar
       String url = await ref.getDownloadURL();
-      
+
       setState(() {
         imageUrl = url; // Set URL gambar
       });
@@ -50,21 +53,24 @@ class _SplashScreenState extends State<SplashScreen> {
           begin: Alignment(0.85, 0.08),
           end: Alignment(0.09, 0.98),
           colors: [
-          Color(0xFFA9DDF3), // Warna hex light blue #B3E5FC
-          Color(0xFF5EB2DC), // Warna hex darker blue #0288D1
-        ],
+            Color(0xFFA9DDF3), // Warna hex light blue #B3E5FC
+            Color(0xFF5EB2DC), // Warna hex darker blue #0288D1
+          ],
         ),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           imageUrl.isNotEmpty
-              ? Image.network(
-                  imageUrl, // Menampilkan gambar dari Firebase Storage
+              ? CachedNetworkImage(
+                  imageUrl:
+                      imageUrl, // Menampilkan gambar dari Firebase dengan cache
                   width: 180,
                   height: 180,
+                  errorWidget: (context, url, error) =>
+                      Icon(Icons.error), // Jika terjadi error
                 )
-              : CircularProgressIndicator(), // Menampilkan loading jika gambar belum diambil
+              : CircularProgressIndicator(),
         ],
       ),
     );

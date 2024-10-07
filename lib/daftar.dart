@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -77,6 +79,13 @@ class _DaftarState extends State<Daftar> {
         password: _passwordController.text.trim(),
       );
 
+      // Simpan data ke Firestore setelah pendaftaran berhasil
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).set({
+        'email': _emailController.text.trim(),
+        'nama': _usernameController.text.trim(),
+        'image': '', // Kosongkan atau tambahkan URL gambar jika tersedia
+      });
+
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => Masuk()),
@@ -110,18 +119,18 @@ class _DaftarState extends State<Daftar> {
       body: Stack(
         children: [
           // Tampilkan gambar latar jika URL sudah diambil
-          if (_backgroundImageUrl.isNotEmpty)
-            Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(_backgroundImageUrl),
-                  fit: BoxFit.cover,
-                ),
+           if (_backgroundImageUrl.isNotEmpty)
+            CachedNetworkImage(
+              imageUrl: _backgroundImageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: (context, url) => Center(
+                child: CircularProgressIndicator(), // Tampilkan loading jika gambar belum diambil
               ),
-            )
-          else
-            Center(
-              child: CircularProgressIndicator(), // Tampilkan loading jika gambar belum diambil
+              errorWidget: (context, url, error) => Center(
+                child: Text('Gagal memuat gambar latar belakang'), // Tampilkan pesan jika gagal memuat gambar
+              ),
             ),
           SingleChildScrollView(
             child: Padding(

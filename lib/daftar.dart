@@ -71,41 +71,37 @@ class _DaftarState extends State<Daftar> {
   }
 
   // Method untuk registrasi menggunakan Firebase Authentication
-  Future<void> _registerWithEmailPassword() async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+  Future<void> _registerWithEmailPassword(String email, String password, String name) async {
+  try {
+    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      // Simpan data ke Firestore setelah pendaftaran berhasil
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).set({
-        'email': _emailController.text.trim(),
-        'nama': _usernameController.text.trim(),
-        'image': '', // Kosongkan atau tambahkan URL gambar jika tersedia
-      });
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => Masuk()),
-      );
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        if (e.code == 'email-already-in-use') {
-          _errorMessage = 'Email ini sudah terdaftar. Silakan gunakan email lain.';
-        } else if (e.code == 'invalid-email') {
-          _errorMessage = 'Format email tidak valid.';
-        } else {
-          _errorMessage = e.message ?? 'Terjadi kesalahan. Silakan coba lagi.';
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+    User? user = userCredential.user;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'email': email,
+        'name': name,
+        'createdAt': Timestamp.now(),
       });
     }
+    print('User registered and data saved in Firestore');
+  } on FirebaseAuthException catch (e) {
+    // Tampilkan pesan kesalahan yang sesuai
+    if (e.code == 'email-already-in-use') {
+      print('Email sudah digunakan. Silakan coba email lain.');
+    } else if (e.code == 'weak-password') {
+      print('Password terlalu lemah. Harap gunakan password yang lebih kuat.');
+    } else {
+      print('Error: ${e.message}');
+    }
+  } catch (e) {
+    print('Error: $e');
   }
+}
+
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -330,8 +326,40 @@ class _DaftarState extends State<Daftar> {
                         ),
                         child: ElevatedButton(
                           onPressed: () async {
-                            // Memanggil fungsi registrasi
-                            await _registerWithEmailPassword(); // Pendaftaran berhasil akan mengarahkan ke halaman login
+                            try {
+                              // Daftarkan pengguna dengan email dan password
+                              UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                                email: _emailController.text,
+                                password: _passwordController.text,
+                              );
+
+                              // Setelah berhasil, simpan data ke Firestore
+                              await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+                                'email': _emailController.text,
+                                'createdAt': Timestamp.now(), // Tanggal pendaftaran
+                                'uid': userCredential.user!.uid, // ID pengguna dari Firebase Authentication
+                                'name' : _usernameController.text,
+                                // Tambahkan data lain yang diperlukan di sini, seperti nama pengguna atau peran
+                              });
+
+                              // Arahkan ke halaman login setelah berhasil menyimpan data
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => Masuk()), // Ganti LoginPage dengan halaman login kamu
+                              );
+                            } on FirebaseAuthException catch (e) {
+                              setState(() {
+                                if (e.code == 'weak-password') {
+                                  _errorMessage = 'Kata sandi terlalu lemah.';
+                                } else if (e.code == 'email-already-in-use') {
+                                  _errorMessage = 'Akun dengan email ini sudah terdaftar.';
+                                } else if (e.code == 'invalid-email') {
+                                  _errorMessage = 'Format email tidak valid.';
+                                } else {
+                                  _errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+                                }
+                              });
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,

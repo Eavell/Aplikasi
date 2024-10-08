@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
 import 'package:eavell/daftar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,10 +43,53 @@ class _MasukState extends State<Masuk> {
     }
   }
 
-  Future<void> _loginWithEmailPassword() async {
+    Future<String?> _getEmailFromName(String name) async {
     try {
+      // Cari pengguna di Firestore berdasarkan nama
+      QuerySnapshot query = await FirebaseFirestore.instance
+          .collection('users')
+          .where('name', isEqualTo: name)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        // Jika pengguna ditemukan, kembalikan email
+        return query.docs.first['email'];
+      } else {
+        // Jika pengguna tidak ditemukan
+        return null;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return null;
+    }
+  }
+
+    Future<void> _loginWithEmailPassword() async {
+    try {
+      String emailOrName = _emailController.text; // Bisa berupa email atau nama
+      String? email;
+
+      // Cek apakah input adalah email dengan format valid
+      bool isEmail = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(emailOrName);
+
+      if (isEmail) {
+        email = emailOrName; // Input adalah email
+      } else {
+        // Jika input adalah nama, cari email yang sesuai
+        email = await _getEmailFromName(emailOrName);
+
+        if (email == null) {
+          setState(() {
+            _errorMessage = 'Nama pengguna tidak ditemukan.';
+          });
+          return;
+        }
+      }
+
+      // Lakukan login menggunakan email yang ditemukan atau diinputkan
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text,
+        email: email!,
         password: _passwordController.text,
       );
 
@@ -60,7 +104,7 @@ class _MasukState extends State<Masuk> {
         if (e.code == 'wrong-password') {
           _errorMessage = 'Kata sandi yang Anda masukkan salah.';
         } else if (e.code == 'user-not-found') {
-          _errorMessage = 'Email tidak terdaftar.';
+          _errorMessage = 'Email atau nama tidak terdaftar.';
         } else if (e.code == 'invalid-email') {
           _errorMessage = 'Format email tidak valid.';
         } else if (e.code == 'user-disabled') {
@@ -71,6 +115,7 @@ class _MasukState extends State<Masuk> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +158,7 @@ class _MasukState extends State<Masuk> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 35.0, left: 25),
                       child: Text(
-                        'Email',
+                        'Nama Atau Email',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
@@ -129,7 +174,7 @@ class _MasukState extends State<Masuk> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText:
-                            _isemailFocused ? null : 'Masukkan Email Anda',
+                            _isemailFocused ? null : 'Masukkan Nama Atau Email Anda',
                         labelStyle: TextStyle(
                           color: Color(0xFFA0A1A8),
                         ),

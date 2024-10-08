@@ -1,6 +1,5 @@
 import 'dart:ui';
-import 'package:eavell/beranda.dart';
-import 'package:eavell/daftar.dart';
+import 'package:eavell/masuk.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 
@@ -138,7 +137,7 @@ class _PerkenalanState extends State<Perkenalan> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const Daftar()),
+                  MaterialPageRoute(builder: (context) => const Masuk()),
                 );
               },
               style: ElevatedButton.styleFrom(

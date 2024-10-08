@@ -1,5 +1,8 @@
 import 'package:eavell/splashScreen.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Beranda extends StatefulWidget {
   const Beranda({Key? key}) : super(key: key);
@@ -9,6 +12,64 @@ class Beranda extends StatefulWidget {
 }
 
 class _BerandaState extends State<Beranda> {
+  String userName = ''; // Untuk menyimpan nama pengguna
+  String profileImageUrl = ''; // Untuk menyimpan URL gambar profil
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserName(); // Ambil nama pengguna
+    _getProfileData(); // Ambil gambar profil
+  }
+
+  // Fungsi untuk mengambil nama pengguna dari Firestore
+  Future<void> _getUserName() async {
+    try {
+      // Ambil UID pengguna yang sedang login
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Ambil data dari Firestore menggunakan UID pengguna
+        DocumentSnapshot userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        setState(() {
+          // Ambil nama dari Firestore dan simpan dalam variabel
+          userName = userData['name'];
+        });
+      }
+    } catch (e) {
+      print('Error getting user name: $e');
+    }
+  }
+
+    Future<void> _getProfileData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Ambil data pengguna dari Firestore menggunakan UID
+        DocumentSnapshot userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        setState(() {
+          // Ambil nama dari Firestore
+          userName = userData['name'];
+
+          // Periksa apakah 'profileImageUrl' ada dan tidak null, jika tidak ada gunakan gambar default
+          profileImageUrl = userData['profileImageUrl'] ?? ''; // Kosong jika belum diatur
+        });
+      }
+    } catch (e) {
+      print('Error getting profile data: $e');
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +94,7 @@ class _BerandaState extends State<Beranda> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Ucok',
+                          userName.isNotEmpty ? userName : 'Memuat...',
                           style: TextStyle(
                             fontSize: 20,
                             color: Colors.white,
@@ -46,7 +107,7 @@ class _BerandaState extends State<Beranda> {
                         ),
                       ],
                     ),
-                    InkWell(
+                      InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
@@ -59,7 +120,9 @@ class _BerandaState extends State<Beranda> {
                       splashColor: Colors.blue.withAlpha(30),
                       child: CircleAvatar(
                         radius: 30,
-                        backgroundImage: AssetImage('assets/profile.png'),
+                        backgroundImage: profileImageUrl.isNotEmpty
+                            ? NetworkImage(profileImageUrl) // Gunakan URL jika ada
+                            : AssetImage('assets/defaultProfile.png'), // Gambar default jika null atau kosong
                       ),
                     ),
                   ],

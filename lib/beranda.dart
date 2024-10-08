@@ -45,7 +45,7 @@ class _BerandaState extends State<Beranda> {
     }
   }
 
-    Future<void> _getProfileData() async {
+  Future<void> _getProfileData() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
 
@@ -61,14 +61,14 @@ class _BerandaState extends State<Beranda> {
           userName = userData['name'];
 
           // Periksa apakah 'profileImageUrl' ada dan tidak null, jika tidak ada gunakan gambar default
-          profileImageUrl = userData['profileImageUrl'] ?? ''; // Kosong jika belum diatur
+          profileImageUrl =
+              userData['profileImageUrl'] ?? ''; // Kosong jika belum diatur
         });
       }
     } catch (e) {
       print('Error getting profile data: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +107,7 @@ class _BerandaState extends State<Beranda> {
                         ),
                       ],
                     ),
-                      InkWell(
+                    InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
@@ -121,8 +121,10 @@ class _BerandaState extends State<Beranda> {
                       child: CircleAvatar(
                         radius: 30,
                         backgroundImage: profileImageUrl.isNotEmpty
-                            ? NetworkImage(profileImageUrl) // Gunakan URL jika ada
-                            : AssetImage('assets/defaultProfile.png'), // Gambar default jika null atau kosong
+                            ? NetworkImage(
+                                profileImageUrl) // Gunakan URL jika ada
+                            : AssetImage(
+                                'assets/defaultProfile.png'), // Gambar default jika null atau kosong
                       ),
                     ),
                   ],
@@ -205,23 +207,24 @@ class _BerandaState extends State<Beranda> {
                             CrossAxisAlignment.start, // Rata atas
                         children: [
                           CategoryItem(
-                            icon: AssetImage('assets/jadwal kapal.png'),
+                            imagePath:
+                                'jadwal kapal.png', // Sesuaikan dengan path di Firebase Storage
                             label: 'Jadwal \nKapal',
                           ),
                           CategoryItem(
-                            icon: AssetImage('assets/penginapan.png'),
+                            imagePath: 'penginapan.png',
                             label: 'Penginapan',
                           ),
                           CategoryItem(
-                            icon: AssetImage('assets/wisata.png'),
+                            imagePath: 'wisata.png',
                             label: 'Wisata',
                           ),
                           CategoryItem(
-                            icon: AssetImage('assets/paket perjalanan.png'),
+                            imagePath: 'paket perjalanan.png',
                             label: 'Paket \nPerjalanan',
                           ),
                           CategoryItem(
-                            icon: AssetImage('assets/kuliner.png'),
+                            imagePath: 'kuliner.png',
                             label: 'Kuliner',
                           ),
                         ],
@@ -239,34 +242,48 @@ class _BerandaState extends State<Beranda> {
             ),
           ),
           SliverToBoxAdapter(
-            child: HorizontalListView(
-              items: [
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pulau Rubiah',
-                  location: 'Kota Sabang, Aceh 24411',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-              ],
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('destination')
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No destinations found'));
+                }
+
+                var destinations = snapshot.data!.docs;
+
+                // Buat list DestinationItem dari data Firestore
+                List<DestinationItem> destinationItems =
+                    destinations.map((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+
+                  // Periksa apakah field ada dan tidak null
+                  String imageUrl = data['imageUrl'] ??
+                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
+                  String name =
+                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
+                  String location = data['location'] ??
+                      'Unknown Location'; // Ganti dengan nilai default
+
+                  return DestinationItem(
+                    imageUrl: imageUrl,
+                    name: name,
+                    location: location,
+                  );
+                }).toList();
+
+                return HorizontalListView(items: destinationItems);
+              },
             ),
           ),
           SliverPadding(
@@ -276,34 +293,58 @@ class _BerandaState extends State<Beranda> {
             ),
           ),
           SliverToBoxAdapter(
-            child: HorizontalListView(
-              items: [
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'Montana Nasi Goreng',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-              ],
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('culinary')
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No culinarys found'));
+                }
+
+                var culinarys = snapshot.data!.docs;
+
+                // Buat list CulinaryItem dari data Firestore
+                List<CulinaryItem> culinaryItems = culinarys.map((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+
+                  // Periksa apakah field ada dan tidak null
+                  String imageUrl = data['imageUrl'] ??
+                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
+                  String name =
+                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
+
+                  // Konversi rating dari String ke double
+                  double rating;
+                  if (data['rating'] != null) {
+                    try {
+                      rating = double.parse(
+                          data['rating']); // Konversi String ke double
+                    } catch (e) {
+                      rating = 0.0; // Nilai default jika konversi gagal
+                    }
+                  } else {
+                    rating = 0.0; // Nilai default jika null
+                  }
+
+                  return CulinaryItem(
+                    imageUrl: imageUrl,
+                    name: name,
+                    rating: rating,
+                  );
+                }).toList();
+
+                return HorizontalListView(items: culinaryItems);
+              },
             ),
           ),
           SliverPadding(
@@ -313,39 +354,61 @@ class _BerandaState extends State<Beranda> {
             ),
           ),
           SliverToBoxAdapter(
-            child: HorizontalListView(
-              items: [
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'The Hawk\'s Nest Resort',
-                  rating: 4.6,
-                  price: 'Rp 700.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-              ],
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('accommodation')
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No  accommodations found'));
+                }
+
+                var  accommodationns = snapshot.data!.docs;
+
+                // Buat list DestinationItem dari data Firestore
+                List< AccommodationItem>  accommodationyItems =  accommodationns.map((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+
+                  // Periksa apakah field ada dan tidak null
+                  String imageUrl = data['imageUrl'] ??
+                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
+                  String name =
+                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
+
+                  // Konversi rating dari String ke double
+                  double rating;
+                  if (data['rating'] != null) {
+                    try {
+                      rating = double.parse(
+                          data['rating']); // Konversi String ke double
+                    } catch (e) {
+                      rating = 0.0; // Nilai default jika konversi gagal
+                    }
+                  } else {
+                    rating = 0.0; // Nilai default jika null
+                  }
+                  String price =
+                      data['price'] ?? 'Unprice'; // Ganti dengan nilai default
+
+                  return  AccommodationItem(
+                    imageUrl: imageUrl,
+                    name: name,
+                    rating: rating,
+                    price: price,
+                  );
+                }).toList();
+
+                return HorizontalListView(items:  accommodationyItems);
+              },
             ),
           ),
         ],
@@ -355,10 +418,15 @@ class _BerandaState extends State<Beranda> {
 }
 
 class CategoryItem extends StatelessWidget {
-  final ImageProvider icon;
+  final String imagePath; // Ubah menjadi path dari Firebase Storage
   final String label;
 
-  CategoryItem({required this.icon, required this.label});
+  CategoryItem({required this.imagePath, required this.label});
+
+  Future<String> _getImageUrl() async {
+    // Ambil URL gambar dari Firebase Storage
+    return await FirebaseStorage.instance.ref(imagePath).getDownloadURL();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -395,23 +463,35 @@ class CategoryItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 49, // Sesuaikan ukuran gambar sesuai kebutuhan
-            height: 64,
-            decoration: BoxDecoration(
-              color: Color(0xFF4BBAE9),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Padding(
-                padding: const EdgeInsets.all(6.0), // Menambahkan padding
-                child: Image(
-                  image: icon,
-                  fit: BoxFit.contain, // Mengubah fit gambar menjadi contain
-                ),
-              ),
-            ),
+          FutureBuilder<String>(
+            future: _getImageUrl(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator(); // Tampilkan loading saat menunggu URL
+              } else if (snapshot.hasError) {
+                return Icon(Icons.error); // Tampilkan icon error jika gagal
+              } else {
+                return Container(
+                  width: 49, // Sesuaikan ukuran gambar sesuai kebutuhan
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF4BBAE9),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0), // Menambahkan padding
+                      child: Image.network(
+                        snapshot.data!, // Load gambar dari URL
+                        fit: BoxFit
+                            .contain, // Mengubah fit gambar menjadi contain
+                      ),
+                    ),
+                  ),
+                );
+              }
+            },
           ),
           SizedBox(height: 8),
           Align(
@@ -472,12 +552,12 @@ class HorizontalListView extends StatelessWidget {
 }
 
 class DestinationItem extends StatelessWidget {
-  final String assetPath;
+  final String imageUrl;
   final String name;
   final String location;
 
   DestinationItem({
-    required this.assetPath,
+    required this.imageUrl,
     required this.name,
     required this.location,
   });
@@ -490,16 +570,6 @@ class DestinationItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => DetailWisataPage(
-        //         name: name,
-        //       ),
-        //     ),
-        //   );
-        // },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -517,8 +587,10 @@ class DestinationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset(assetPath,
-                  fit: BoxFit.cover, height: 160, width: 150),
+              Image.network(imageUrl,
+                  fit: BoxFit.cover,
+                  height: 160,
+                  width: 150), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -565,12 +637,12 @@ class DestinationItem extends StatelessWidget {
 }
 
 class CulinaryItem extends StatelessWidget {
-  final String assetPath;
+  final String imageUrl;
   final String name;
   final double rating;
 
   CulinaryItem({
-    required this.assetPath,
+    required this.imageUrl,
     required this.name,
     required this.rating,
   });
@@ -610,7 +682,7 @@ class CulinaryItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset(assetPath,
+              Image.network(imageUrl,
                   fit: BoxFit.cover, height: 160, width: 150),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
@@ -653,13 +725,13 @@ class CulinaryItem extends StatelessWidget {
 }
 
 class AccommodationItem extends StatelessWidget {
-  final String assetPath;
+  final String imageUrl;
   final String name;
   final double rating;
   final String price;
 
   AccommodationItem({
-    required this.assetPath,
+    required this.imageUrl,
     required this.name,
     required this.rating,
     required this.price,
@@ -700,7 +772,7 @@ class AccommodationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset(assetPath,
+              Image.network(imageUrl,
                   fit: BoxFit.cover, height: 160, width: 150),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),

@@ -1,4 +1,9 @@
+import 'package:eavell/PaketTravel.dart';
+import 'package:eavell/jadwalKapal.dart';
+import 'package:eavell/kuliner.dart';
+import 'package:eavell/penginapan.dart';
 import 'package:eavell/splashScreen.dart';
+import 'package:eavell/wisata.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -431,35 +436,35 @@ class CategoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // onTap: () {
-      //   // Aksi yang diambil saat tombol ditekan
-      //   if (label == 'Jadwal \nKapal') {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => JadwalKapal()),
-      //     );
-      //   } else if (label == 'Penginapan') {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => Penginapan()),
-      //     );
-      //   } else if (label == 'Wisata') {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => Wisata()),
-      //     );
-      //   } else if (label == 'Paket \nPerjalanan') {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => PaketPerjalanan()),
-      //     );
-      //   } else if (label == 'Kuliner') {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => Kuliner()),
-      //     );
-      //   }
-      // },
+      onTap: () {
+        // Aksi yang diambil saat tombol ditekan
+        if (label == 'Jadwal \nKapal') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => JadwalKapal()),
+          );
+        } else if (label == 'Penginapan') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Penginapan()),
+          );
+        } else if (label == 'Wisata') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Wisata()),
+          );
+        } else if (label == 'Paket \nPerjalanan') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PaketTravel()),
+          );
+        } else if (label == 'Kuliner') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Kuliner()),
+          );
+        }
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

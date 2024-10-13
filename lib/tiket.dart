@@ -2,7 +2,10 @@ import 'package:eavell/JadwalKapal.dart';
 import 'package:flutter/material.dart';
 
 class Tiket extends StatefulWidget {
-  const Tiket({super.key});
+  final String date;      // Parameter untuk tanggal
+  final String schedule;  // Parameter untuk jadwal/trip
+
+  const Tiket({super.key, required this.date, required this.schedule});  
 
   @override
   State<Tiket> createState() => _TiketState();
@@ -12,6 +15,7 @@ class _TiketState extends State<Tiket> {
   List<Widget> passengers = [];
   double screenWidth = 0;
   double screenHeight = 0;
+
 
   @override
   void didChangeDependencies() {
@@ -103,14 +107,14 @@ class _TiketState extends State<Tiket> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      "Jumat, 31 Mei 2024",
+                      widget.date,
                       style: TextStyle(
                         fontSize: screenWidth * 0.045,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
-                      "Trip 1 Pukul 07.30 WIB AH2",
+                      widget.schedule,
                       style: TextStyle(
                         fontSize: screenWidth * 0.04,
                         color: Colors.grey,

@@ -1,3 +1,4 @@
+import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
 
 class ProfilPage extends StatefulWidget {
@@ -29,7 +30,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   color: Colors.white, // Mengubah warna ikon menjadi putih
                   iconSize: screenWidth * 0.07, // Ukuran ikon
                   onPressed: () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => Beranda()),);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Beranda()),);
                   },
                 ),
               ),

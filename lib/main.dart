@@ -1,4 +1,5 @@
 // import 'package:eavell/JadwalKapal.dart';
+import 'package:eavell/jadwalKapal.dart';
 import 'package:eavell/splashScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -40,10 +41,10 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 119, 203, 240)),
         useMaterial3: true,
       ),
-      home: SplashScreen(),
+      home: JadwalKapal(),
     );
   }
 }

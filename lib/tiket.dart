@@ -13,9 +13,9 @@ class Tiket extends StatefulWidget {
 
 class _TiketState extends State<Tiket> {
   List<Widget> passengers = [];
+  List<Map<String, dynamic>> passengerData = [];
   double screenWidth = 0;
   double screenHeight = 0;
-
 
   @override
   void didChangeDependencies() {
@@ -33,8 +33,83 @@ class _TiketState extends State<Tiket> {
   void addPassenger() {
     int passengerNumber = passengers.length + 1;
     setState(() {
+      passengerData.add({
+        'name': '',
+        'age': '',
+        'address': '',
+        'vehicleType': '',
+        'vehiclePlate': ''
+      });
       passengers.add(_buildPassengerContainer(passengerNumber));
     });
+  }
+
+  void _showDialog() {
+    String allData = 'Tanggal: ${widget.date}\nTrip: ${widget.schedule}\n\n';
+    
+    for (int i = 0; i < passengerData.length; i++) {
+      allData += 'Penumpang ${i + 1}:\n';
+      allData += 'Nama: ${passengerData[i]['name']}\n';
+      allData += 'Umur: ${passengerData[i]['age']}\n';
+      allData += 'Alamat: ${passengerData[i]['address']}\n';
+      allData += 'Jenis Kendaraan: ${passengerData[i]['vehicleType']}\n';
+      allData += 'Plat Kendaraan: ${passengerData[i]['vehiclePlate']}\n\n';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          title: Center(
+            child: Text(
+              'Data Tiket',
+              style: TextStyle(
+                color: Color(0xFF4BBAE9),
+                fontWeight: FontWeight.bold,
+                fontSize: screenWidth * 0.05,
+              ),
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              allData,
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Center(
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  backgroundColor: Color(0xFF4BBAE9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+                ),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.045,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -162,12 +237,12 @@ class _TiketState extends State<Tiket> {
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.05),
+            SizedBox(height: screenHeight * 0.02),
             Container(
-              width: screenWidth * 0.95,
-              height: screenHeight * 0.06,
+              width: screenWidth * 0.90,
+              height: screenHeight * 0.05,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _showDialog,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF4BBAE9),
                   shape: RoundedRectangleBorder(
@@ -176,10 +251,10 @@ class _TiketState extends State<Tiket> {
                   padding: EdgeInsets.all(10),
                 ),
                 child: Text(
-                  'Kirim',
+                  'Selesai',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: screenWidth * 0.05,
+                    fontSize: screenWidth * 0.04,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -227,12 +302,11 @@ class _TiketState extends State<Tiket> {
                 ),
               ),
             ),
-            _buildInputField('Nama', 'Masukkan Nama Anda', screenWidth),
-            _buildInputField('Umur', 'Masukkan Umur Anda', screenWidth),
-            _buildInputField('Alamat', 'Masukkan Alamat Anda', screenWidth),
-            _buildDropdownField(screenWidth),
-            _buildInputField('Plat Kendaraan (Opsional)',
-                'Masukkan Plat Kendaraan Anda', screenWidth),
+            _buildInputField('Nama', 'Masukkan Nama Anda', screenWidth, passengerNumber, 'name'),
+            _buildInputField('Umur', 'Masukkan Umur Anda', screenWidth, passengerNumber, 'age'),
+            _buildInputField('Alamat', 'Masukkan Alamat Anda', screenWidth, passengerNumber, 'address'),
+            _buildDropdownField(screenWidth, passengerNumber),
+            _buildInputField('Plat Kendaraan (Opsional)', 'Masukkan Plat Kendaraan Anda', screenWidth, passengerNumber, 'vehiclePlate'),
             SizedBox(height: screenHeight * 0.01),
 
             Align(
@@ -241,6 +315,7 @@ class _TiketState extends State<Tiket> {
                 onPressed: () {
                   setState(() {
                     passengers.removeAt(passengerNumber - 1);
+                    passengerData.removeAt(passengerNumber - 1);
                   });
                 },
                 child: Text(
@@ -259,107 +334,71 @@ class _TiketState extends State<Tiket> {
     );
   }
 
-  Widget _buildInputField(String label, String hint, double screenWidth) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-            top: screenWidth * 0.01,
-            left: screenWidth * 0.06,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: screenWidth * 0.04,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
-            ),
-          ),
+  Widget _buildInputField(String label, String hintText, double screenWidth, int passengerNumber, String fieldKey) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: TextField(
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hintText,
         ),
-        SizedBox(height: screenWidth * 0.02),
-        Container(
-          width: screenWidth * 0.86,
-          height: 43,
-          child: TextField(
-            decoration: InputDecoration(
-              labelText: hint,
-              labelStyle: TextStyle(
-                color: Color(0xFFA0A1A8),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 40.0, horizontal: screenWidth * 0.05),
-              fillColor: Colors.white,
-              filled: true,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: BorderSide(color: Color(0xFF7F7F7F)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: BorderSide(color: Color(0xFF7F7F7F)),
-              ),
-            ),
-          ),
-        ),
-      ],
+        onChanged: (value) {
+          setState(() {
+            passengerData[passengerNumber - 1][fieldKey] = value;
+          });
+        },
+      ),
     );
   }
 
-  Widget _buildDropdownField(double screenWidth) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-            top: screenWidth * 0.01,
-            left: screenWidth * 0.06,
-          ),
-          child: Text(
-            'Jenis Kendaraan (Opsional)',
-            style: TextStyle(
-              fontSize: screenWidth * 0.04,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
+Widget _buildDropdownField(double screenWidth, int passengerNumber) {
+  return Column(
+    children: [
+      SizedBox(height: 5),
+      Container(
+        width: screenWidth * 0.85,
+        child: DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 8), // Sesuaikan padding agar lebih rapi
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.blue), // Warna garis saat dropdown difokuskan
             ),
           ),
+          isExpanded: true,
+          value: passengerData[passengerNumber - 1]['vehicleType'].isEmpty
+              ? null
+              : passengerData[passengerNumber - 1]['vehicleType'],
+          hint: Text(
+            'Pilih Jenis Kendaraan (Opsional)',
+            style: TextStyle(fontSize: screenWidth * 0.045,fontWeight: FontWeight.w400),
+          ),
+          items: <String>[
+            'Motor',
+            'Mobil',
+            'Bus',
+            'Truk',
+            'Lainnya'
+          ].map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              passengerData[passengerNumber - 1]['vehicleType'] = value!;
+            });
+          },
         ),
-        SizedBox(height: screenWidth * 0.02),
-        Container(
-          width: screenWidth * 0.86,
-          height: 43,
-          decoration: BoxDecoration(
-            border: Border.all(color: Color(0xFF7F7F7F)),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: DropdownButton<String>(
-            hint: Padding(
-            padding: EdgeInsets.only(left: 10.0),
-            child: Text('Pilih jenis kendaraan'),
-          ),
-            underline: SizedBox(),
-            isExpanded: true,
-            onChanged: (String? newValue) {
-              setState(() {
-                // Perbarui state dropdown jika diperlukan
-              });
-            },
-            items: <String>[
-              'Roda 2',
-              'Roda 4',
-              'Roda 6',
-            ].map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 10.0),
-                  child: Text(value),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+      SizedBox(height: 10),
+    ],
+  );
+}
+
 }

@@ -2,6 +2,7 @@ import 'package:eavell/PaketTravel.dart';
 import 'package:eavell/jadwalKapal.dart';
 import 'package:eavell/kuliner.dart';
 import 'package:eavell/penginapan.dart';
+import 'package:eavell/profil.dart';
 import 'package:eavell/splashScreen.dart';
 import 'package:eavell/wisata.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -117,7 +118,7 @@ class _BerandaState extends State<Beranda> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SplashScreen(),
+                            builder: (context) => ProfilPage(),
                           ),
                         );
                       },

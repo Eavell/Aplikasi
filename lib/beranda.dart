@@ -251,6 +251,8 @@ class _BerandaState extends State<Beranda> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('destination')
+                  .orderBy('createdAt',
+                      descending: true) // Urutkan berdasarkan waktu penambahan
                   .limit(5)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -275,11 +277,11 @@ class _BerandaState extends State<Beranda> {
 
                   // Periksa apakah field ada dan tidak null
                   String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
+                      'default_image_url'; // URL gambar default
                   String name =
-                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
+                      data['name'] ?? 'Unnamed'; // Nama default jika null
                   String location = data['location'] ??
-                      'Unknown Location'; // Ganti dengan nilai default
+                      'Unknown Location'; // Lokasi default jika null
 
                   return DestinationItem(
                     imageUrl: imageUrl,
@@ -302,6 +304,7 @@ class _BerandaState extends State<Beranda> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('culinary')
+                  .orderBy('createdAt', descending: true)
                   .limit(5)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -363,6 +366,7 @@ class _BerandaState extends State<Beranda> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('accommodation')
+                  .orderBy('createdAt', descending: true)
                   .limit(5)
                   .snapshots(),
               builder: (context, snapshot) {
@@ -378,10 +382,11 @@ class _BerandaState extends State<Beranda> {
                   return Center(child: Text('No  accommodations found'));
                 }
 
-                var  accommodationns = snapshot.data!.docs;
+                var accommodationns = snapshot.data!.docs;
 
                 // Buat list DestinationItem dari data Firestore
-                List< AccommodationItem>  accommodationyItems =  accommodationns.map((doc) {
+                List<AccommodationItem> accommodationyItems =
+                    accommodationns.map((doc) {
                   var data = doc.data() as Map<String, dynamic>;
 
                   // Periksa apakah field ada dan tidak null
@@ -405,7 +410,7 @@ class _BerandaState extends State<Beranda> {
                   String price =
                       data['price'] ?? 'Unprice'; // Ganti dengan nilai default
 
-                  return  AccommodationItem(
+                  return AccommodationItem(
                     imageUrl: imageUrl,
                     name: name,
                     rating: rating,
@@ -413,7 +418,7 @@ class _BerandaState extends State<Beranda> {
                   );
                 }).toList();
 
-                return HorizontalListView(items:  accommodationyItems);
+                return HorizontalListView(items: accommodationyItems);
               },
             ),
           ),

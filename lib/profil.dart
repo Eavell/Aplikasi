@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
+import 'package:eavell/masuk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -108,52 +109,90 @@ class _ProfilPageState extends State<ProfilPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(58.0), // Tinggi AppBar
-        child: Container(
-          height: 170.0, // Tinggi AppBar
-          width: double.infinity, // Lebar AppBar, mengikuti lebar layar
-          color: Color(0xFF4BBAE9), // Warna latar belakang AppBar
-          child: Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                    left: screenWidth * 0.04,
-                    top: 35.0), // Mengatur posisi x dan y
-                child: IconButton(
-                  icon: Icon(Icons.arrow_back), // Ikon kembali bawaan Flutter
-                  color: Colors.white, // Mengubah warna ikon menjadi putih
-                  iconSize: screenWidth * 0.07, // Ukuran ikon
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Beranda()),
-                    );
-                  },
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 35.0), // Menyamakan posisi y dengan ikon kembali
-                  child: Center(
-                    child: Text(
-                      'Paket Travel',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: screenWidth * 0.05,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                  width: screenWidth *
-                      0.1), // Spacer untuk mengimbangi tombol kembali di kanan
-            ],
+  preferredSize: Size.fromHeight(58.0), // Tinggi AppBar
+  child: Container(
+    height: 170.0, // Tinggi AppBar
+    width: double.infinity, // Lebar AppBar, mengikuti lebar layar
+    color: Color(0xFF4BBAE9), // Warna latar belakang AppBar
+    child: Row(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+              left: screenWidth * 0.04, top: 35.0), // Mengatur posisi x dan y
+          child: IconButton(
+            icon: Icon(Icons.arrow_back), // Ikon kembali bawaan Flutter
+            color: Colors.white, // Mengubah warna ikon menjadi putih
+            iconSize: screenWidth * 0.07, // Ukuran ikon
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Beranda()),
+              );
+            },
           ),
         ),
-      ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(
+                top: 35.0), // Menyamakan posisi y dengan ikon kembali
+            child: Center(
+              child: Text(
+                'Paket Travel',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+              right: screenWidth * 0.04, top: 35.0), // Mengatur posisi x dan y
+          child: IconButton(
+            icon: Icon(Icons.logout), // Ikon log out bawaan Flutter
+            color: Colors.white, // Mengubah warna ikon menjadi putih
+            iconSize: screenWidth * 0.07, // Ukuran ikon
+            onPressed: () {
+              // Menampilkan dialog konfirmasi saat tombol log out ditekan
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text("Konfirmasi"),
+                    content: Text("Apakah Anda ingin keluar?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          // Aksi saat memilih "Tidak", dialog ditutup
+                          Navigator.of(context).pop();
+                        },
+                        child: Text("Tidak"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Aksi saat memilih "Ya", arahkan ke halaman masuk
+                          Navigator.of(context).pop(); // Tutup dialog
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => Masuk()),
+                          );
+                        },
+                        child: Text("Ya"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
 
       //Bagian Bawah
       body: CustomScrollView(

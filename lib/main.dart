@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 119, 203, 240)),
         useMaterial3: true,
       ),
-      home: JadwalKapal(),
+      home: SplashScreen(),
     );
   }
 }

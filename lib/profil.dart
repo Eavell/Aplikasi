@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({Key? key}) : super(key: key);
@@ -15,13 +18,15 @@ class _ProfilPageState extends State<ProfilPage> {
   String userEmail = ''; // Untuk menyimpan email pengguna
   String profileImageUrl = ''; // Untuk menyimpan URL gambar profil
 
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
     _getUserData(); // Ambil nama, email, dan gambar profil pengguna
   }
 
-// Fungsi untuk mengambil data pengguna dari Firestore
+  // Fungsi untuk mengambil data pengguna dari Firestore
   Future<void> _getUserData() async {
     try {
       // Ambil UID pengguna yang sedang login
@@ -47,6 +52,53 @@ class _ProfilPageState extends State<ProfilPage> {
       }
     } catch (e) {
       print('Error getting user data: $e');
+    }
+  }
+
+  // Fungsi untuk memilih gambar dari galeri atau kamera
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery); // Pilih gambar dari galeri
+    if (image != null) {
+      await _uploadImageToFirebase(File(image.path)); // Unggah gambar ke Firebase
+    }
+  }
+
+  // Fungsi untuk mengunggah gambar ke Firebase Storage
+  Future<void> _uploadImageToFirebase(File imageFile) async {
+    try {
+      // Ambil UID pengguna
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String userId = user.uid;
+
+        // Path di Firebase Storage
+        Reference ref = FirebaseStorage.instance
+            .ref()
+            .child('profileImages')
+            .child(userId + '.jpg');
+
+        // Unggah gambar
+        UploadTask uploadTask = ref.putFile(imageFile);
+
+        // Tunggu hingga selesai
+        TaskSnapshot taskSnapshot = await uploadTask;
+
+        // Dapatkan URL gambar yang sudah diunggah
+        String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+
+        // Simpan URL gambar di Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({'profileImageUrl': downloadUrl});
+
+        // Perbarui state untuk menampilkan gambar baru
+        setState(() {
+          profileImageUrl = downloadUrl;
+        });
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
     }
   }
 
@@ -161,8 +213,7 @@ class _ProfilPageState extends State<ProfilPage> {
                         child: CircleAvatar(
                           radius: 48, // Ukuran untuk gambar profil
                           backgroundImage: profileImageUrl.isNotEmpty
-                              ? NetworkImage(
-                                  profileImageUrl) // Jika URL gambar profil ada, gunakan gambar dari internet
+                              ? NetworkImage(profileImageUrl) // Jika URL gambar profil ada, gunakan gambar dari internet
                               : AssetImage('assets/defaultProfile.png')
                                   as ImageProvider, // Jika tidak ada gambar, gunakan gambar default dari assets
                         ),
@@ -170,17 +221,20 @@ class _ProfilPageState extends State<ProfilPage> {
                       Positioned(
                         right: 0,
                         bottom: 0,
-                        child: Container(
-                          height: 35,
-                          width: 35,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
+                        child: GestureDetector(
+                          onTap: _pickImage, // Ketika tombol edit ditekan
+                          child: Container(
+                            height: 35,
+                            width: 35,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),

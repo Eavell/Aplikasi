@@ -85,6 +85,7 @@ class _DaftarState extends State<Daftar> {
         'email': email,
         'name': name,
         'createdAt': Timestamp.now(),
+        'profileImageUrl': '', // Field profile image dengan nilai kosong
       });
     }
     print('User registered and data saved in Firestore');
@@ -339,6 +340,7 @@ class _DaftarState extends State<Daftar> {
                                 'createdAt': Timestamp.now(), // Tanggal pendaftaran
                                 'uid': userCredential.user!.uid, // ID pengguna dari Firebase Authentication
                                 'name' : _usernameController.text,
+                                'profileImageUrl': '', // Field profile image dengan nilai kosong
                                 // Tambahkan data lain yang diperlukan di sini, seperti nama pengguna atau peran
                               });
 

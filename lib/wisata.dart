@@ -1,5 +1,7 @@
 import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'deskripsi_wisata.dart';
 
 class Wisata extends StatefulWidget {
   const Wisata({Key? key}) : super(key: key);
@@ -9,6 +11,10 @@ class Wisata extends StatefulWidget {
 }
 
 class _WisataState extends State<Wisata> {
+  // Firestore instance
+  final CollectionReference _destinationCollection =
+      FirebaseFirestore.instance.collection('deskripsi_wisata');
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -61,45 +67,35 @@ class _WisataState extends State<Wisata> {
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: VerticalGridView(
-              items: [
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pulau Rubiah',
-                  location: 'Pulau Rubiah, Kota Sabang, Aceh 24411',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-                DestinationItem(
-                  assetPath: 'assets/pulau rubiah.png',
-                  name: 'Pantai Iboih',
-                  location: 'Kota Sabang, Aceh',
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _destinationCollection.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text("Tidak ada data Wisata yang tersedia."));
+          }
+
+          // Convert the query snapshot into a list of widgets
+          List<Widget> destinationItem = snapshot.data!.docs.map((doc) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            return DestinationItem(
+              assetPath: data['imageUrl'] ?? '',
+              name: data['nama'] ?? 'Unknown',
+              lokasi: data['lokasi'] ?? 'Unknown',
+            );
+          }).toList();
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: VerticalGridView(items: destinationItem),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -135,27 +131,27 @@ class VerticalGridView extends StatelessWidget {
 class DestinationItem extends StatelessWidget {
   final String assetPath;
   final String name;
-  final String location;
+  final String lokasi;
 
   DestinationItem({
     required this.assetPath,
     required this.name,
-    required this.location,
+    required this.lokasi,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // onTap: () {
-      //   Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => DetailWisataPage(
-      //         name: name,
-      //       ),
-      //     ),
-      //   );
-      // },
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WisataPage(
+              namaWisata: name,
+            ),
+          ),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -176,7 +172,7 @@ class DestinationItem extends StatelessWidget {
                 topLeft: Radius.circular(8.0),
                 topRight: Radius.circular(8.0),
               ),
-              child: Image.asset(assetPath,
+              child: Image.network(assetPath,
                   fit: BoxFit.cover, height: 160, width: double.infinity),
             ),
             Padding(
@@ -201,7 +197,7 @@ class DestinationItem extends StatelessWidget {
                         SizedBox(width: 2),
                         Expanded(
                           child: Text(
-                            location,
+                            lokasi,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,

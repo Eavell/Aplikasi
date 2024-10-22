@@ -48,28 +48,28 @@ class _KulinerPageState extends State<KulinerPage> {
     }
   }
   Future<void> loadDataKuliner() async {
-  try {
-    // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
-    DocumentSnapshot kulinerSnapshot = await FirebaseFirestore.instance
-        .collection('deskripsi_kuliner')
-        .doc(widget.namaKuliner)
-        .get();
+    try {
+      // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+      DocumentSnapshot kulinerSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_kuliner')
+          .doc(widget.namaKuliner)
+          .get();
 
-    // Mengecek apakah data ada
-    if (kulinerSnapshot.exists) {
-      setState(() {
-        // Ambil data field 'alamat', 'rating', dan 'harga'
-        alamat = kulinerSnapshot.get('alamat') ?? 'Alamat tidak tersedia';
-        rating = kulinerSnapshot.get('rating') ?? 'Rating tidak tersedia';
-        harga = kulinerSnapshot.get('harga') ?? 'Harga tidak tersedia';
-      });
-    } else {
-      print('Dokumen tidak ditemukan');
+      // Mengecek apakah data ada
+      if (kulinerSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          alamat = kulinerSnapshot.get('alamat') ?? 'Alamat tidak tersedia';
+          rating = kulinerSnapshot.get('rating') ?? 'Rating tidak tersedia';
+          harga = kulinerSnapshot.get('harga') ?? 'Harga tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
     }
-  } catch (e) {
-    print("Error fetching data: $e");
   }
-}
 
 
   // Fungsi untuk mengambil data dari Firestore

@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
+import 'deskripsi_penginapan.dart';
 
 class Penginapan extends StatefulWidget {
   const Penginapan({Key? key}) : super(key: key);
@@ -9,9 +11,14 @@ class Penginapan extends StatefulWidget {
 }
 
 class _PenginapanState extends State<Penginapan> {
+  // Firestore instance
+  final CollectionReference _accommodationCollection =
+      FirebaseFirestore.instance.collection('deskripsi_penginapan');
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -61,45 +68,37 @@ class _PenginapanState extends State<Penginapan> {
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: VerticalGridView(
-              items: [
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'The Hawk\'s Nest Resort',
-                  rating: 4.6,
-                  price: 'Rp 700.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Weh Ocean Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-                AccommodationItem(
-                  assetPath: 'assets/hawk.png',
-                  name: 'Panorama Seulako Resort',
-                  rating: 4.7,
-                  price: 'Rp 1.910.000',
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _accommodationCollection.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text("Tidak ada data penginapan yang tersedia."));
+          }
+
+          // Convert the query snapshot into a list of widgets
+          List<Widget> accommodationItems = snapshot.data!.docs.map((doc) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            return AccommodationItem(
+              assetPath: data['imageUrl'] ?? '',
+              name: data['nama'] ?? 'Unknown',
+              rating: (data['rating'] is String) ? double.parse(data['rating']) : data['rating'].toDouble(),
+              price: data['harga'] ?? 'Unknown',
+              // price: (data['harga'] is String) ? double.parse(data['harga']) : data['harga'].toDouble(),
+            );
+          }).toList();
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: VerticalGridView(items: accommodationItems),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -148,16 +147,16 @@ class AccommodationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // onTap: () {
-      //   Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => DetailPenginapanPage(
-      //         name: name,
-      //       ),
-      //     ),
-      //   );
-      // },
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PenginapanPage(
+              namaPenginapan: name,
+            ),
+          ),
+        );
+      },
       child: Container(
         width: 142,
         decoration: BoxDecoration(
@@ -179,7 +178,7 @@ class AccommodationItem extends StatelessWidget {
                 topLeft: Radius.circular(8.0),
                 topRight: Radius.circular(8.0),
               ),
-              child: Image.asset(assetPath,
+              child: Image.network(assetPath,
                   fit: BoxFit.cover, height: 160, width: double.infinity),
             ),
             Padding(

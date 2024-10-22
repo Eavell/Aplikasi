@@ -1,20 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class WisataPage extends StatefulWidget {
+  final String namaWisata;
+
+  WisataPage({required this.namaWisata});
+
   @override
   _WisataPageState createState() => _WisataPageState();
 }
 
 class _WisataPageState extends State<WisataPage> {
   final PageController _pageController = PageController();
-  final List<String> images = [
-    'assets/images/pulau_rubiah3.png',
-    'assets/images/pulau_rubiah2.png',
-    'assets/images/pulau_rubiah.png',
-  ];
+  List<String> images = [];
+  String lokasi= '';
+  String rating = '';
+  String deskripsi = '';
 
   int currentPage = 0;
   bool isBookmarked = false;
+
+  Future<void> loadImagesFromFirebase() async {
+    // Nama folder sesuai dengan nama paket yang dipilih oleh user
+    String selectedPaket = widget.namaWisata; // Misal widget.paketName adalah 'Diamond', 'Gold', atau 'Silver'
+    String folderPath = 'destination/$selectedPaket/';
+
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child(folderPath);
+      final listResult = await storageRef.listAll();
+
+      List<String> imageUrls = [];
+      for (var item in listResult.items) {
+        // Mendapatkan URL download dari setiap file di folder
+        String downloadUrl = await item.getDownloadURL();
+        // print("Download URL: $downloadUrl"); // Tambahkan ini untuk debug
+        imageUrls.add(downloadUrl);
+      }
+
+      setState(() {
+        images = imageUrls; // Mengisi imagesGallery dengan URL gambar dari Firebase
+      });
+    } catch (e) {
+      print("Failed to load images: $e");
+    }
+  }
+
+  Future<void> loadDataWisata() async {
+    try {
+      // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+      DocumentSnapshot wisataSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_wisata')
+          .doc(widget.namaWisata)
+          .get();
+
+      // Mengecek apakah data ada
+      if (wisataSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          lokasi = wisataSnapshot.get('lokasi') ?? 'Alamat tidak tersedia';
+          rating = wisataSnapshot.get('rating') ?? 'Rating tidak tersedia';
+          deskripsi = wisataSnapshot.get('deskripsi') ?? 'Harga tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadDataWisata();
+    loadImagesFromFirebase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +101,7 @@ class _WisataPageState extends State<WisataPage> {
                           return Container(
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage(image),
+                                image: NetworkImage(image),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -80,7 +141,9 @@ class _WisataPageState extends State<WisataPage> {
                           SizedBox(width: 4.0),
                           Expanded(
                             child: Text(
-                              'Pulau Rubiah, Kota Sabang, Aceh 24411',
+                              lokasi.isNotEmpty
+                                  ? lokasi
+                                  : 'Alamat tidak tersedia',
                               style: TextStyle(
                                 fontSize: 16.0,
                                 color: Colors.black54,
@@ -99,7 +162,7 @@ class _WisataPageState extends State<WisataPage> {
                       ),
                       SizedBox(height: 8.0),
                       Text(
-                        "Pulau Rubiah merupakan salah satu keindahan alam di pulau tak berpenghuni yang berada di Kota Sabang Provinsi Aceh tepatnya di sebelah barat laut dari Pulau Weh. Pulau ini akan membuat Kita terpesona serta takjub akan keindahan bawah lautnya, keelokan pemandangannya yang eksotis dan sejarah tempat ini.",
+                        deskripsi,
                         style: TextStyle(
                           fontSize: 16.0,
                           color: Colors.black87,
@@ -187,7 +250,7 @@ class _WisataPageState extends State<WisataPage> {
               top: 40.0,
               left: 16.0,
               child: IconButton(
-                icon: Image.asset('assets/images/back_arrow.png'),
+                icon: Image.asset('assets/tombol_kembali.png'),
                 onPressed: () {
                   Navigator.pop(context);
                 },

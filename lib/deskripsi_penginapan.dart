@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -26,7 +27,8 @@ class _PenginapanPageState extends State<PenginapanPage> {
 
   Future<void> loadImagesFromFirebase() async {
     // Nama folder sesuai dengan nama paket yang dipilih oleh user
-    String selectedPaket = widget.namaPenginapan; // Misal widget.paketName adalah 'Diamond', 'Gold', atau 'Silver'
+    String selectedPaket = widget
+        .namaPenginapan; // Misal widget.paketName adalah 'Diamond', 'Gold', atau 'Silver'
     String folderPath = 'accommodation/$selectedPaket/';
 
     try {
@@ -42,7 +44,8 @@ class _PenginapanPageState extends State<PenginapanPage> {
       }
 
       setState(() {
-        images = imageUrls; // Mengisi imagesGallery dengan URL gambar dari Firebase
+        images =
+            imageUrls; // Mengisi imagesGallery dengan URL gambar dari Firebase
       });
     } catch (e) {
       print("Failed to load images: $e");
@@ -64,7 +67,8 @@ class _PenginapanPageState extends State<PenginapanPage> {
           lokasi = penginapanSnapshot.get('lokasi') ?? 'Alamat tidak tersedia';
           rating = penginapanSnapshot.get('rating') ?? 'Rating tidak tersedia';
           harga = penginapanSnapshot.get('harga') ?? 'Harga tidak tersedia';
-          deskripsi = penginapanSnapshot.get('deskripsi') ?? 'Tidak ada deskripsi';
+          deskripsi =
+              penginapanSnapshot.get('deskripsi') ?? 'Tidak ada deskripsi';
         });
       } else {
         print('Dokumen tidak ditemukan');
@@ -88,7 +92,8 @@ class _PenginapanPageState extends State<PenginapanPage> {
             String fieldName = 'fasilitas_$i';
             String? fasilitas = penginapanData.get(fieldName);
             if (fasilitas != null) {
-              fasilitasItems.add(fasilitas); // Simpan jam buka dalam format String
+              fasilitasItems
+                  .add(fasilitas); // Simpan jam buka dalam format String
             }
           }
         });
@@ -122,6 +127,36 @@ class _PenginapanPageState extends State<PenginapanPage> {
     }
   }
 
+  Future<void> checkBookmarkStatus() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      String uid = user.uid;
+
+      final bookmarkRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('bookmarksPenginapan')
+          .doc(widget.namaPenginapan);
+
+      try {
+        // Periksa apakah bookmark ada di Firestore
+        DocumentSnapshot bookmarkSnapshot = await bookmarkRef.get();
+        if (bookmarkSnapshot.exists) {
+          setState(() {
+            isBookmarked = true;
+          });
+        } else {
+          setState(() {
+            isBookmarked = false;
+          });
+        }
+      } catch (e) {
+        print("Error checking bookmark status: $e");
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -129,6 +164,7 @@ class _PenginapanPageState extends State<PenginapanPage> {
     getFasilitasFromFirestore();
     getWaktuCICOFromFirestore();
     loadImagesFromFirebase();
+    checkBookmarkStatus();
   }
 
   @override
@@ -188,8 +224,10 @@ class _PenginapanPageState extends State<PenginapanPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start, // Atur sesuai kebutuhan Anda (dalam hal ini, MainAxisAlignment.start untuk rata kiri)
-                        crossAxisAlignment: CrossAxisAlignment.start, // Ini yang akan membuat konten menjadi rata atas
+                        mainAxisAlignment: MainAxisAlignment
+                            .start, // Atur sesuai kebutuhan Anda (dalam hal ini, MainAxisAlignment.start untuk rata kiri)
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // Ini yang akan membuat konten menjadi rata atas
                         children: [
                           Icon(Icons.location_on, color: Colors.black54),
                           SizedBox(width: 4.0),
@@ -253,11 +291,13 @@ class _PenginapanPageState extends State<PenginapanPage> {
                           // Split the menu string into name and price
                           var parts = waktu.split(', ');
                           var waktuName = parts[0];
-                          var price = parts.length > 1 ? parts[1] : '...'; // Default price if not available
+                          var price = parts.length > 1
+                              ? parts[1]
+                              : '...'; // Default price if not available
                           return menuItem(waktuName, price);
                         }).toList(),
                       ),
-                      SizedBox(height: 30.0),  // Add space at the bottom
+                      SizedBox(height: 30.0), // Add space at the bottom
                     ],
                   ),
                 ),
@@ -305,12 +345,60 @@ class _PenginapanPageState extends State<PenginapanPage> {
                           icon: Icon(
                             Icons.bookmark,
                             size: 32,
-                            color: isBookmarked ? Colors.pink : Colors.grey,
+                            color: isBookmarked
+                                ? Colors.pink
+                                : Colors
+                                    .grey, // Bookmark color based on the state
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isBookmarked = !isBookmarked;
-                            });
+                          onPressed: () async {
+                            // Get the current logged-in user
+                            User? user = FirebaseAuth.instance.currentUser;
+
+                            if (user != null) {
+                              String uid =
+                                  user.uid; // Get the UID of the logged-in user
+
+                              // Firestore reference to the user's bookmarks collection
+                              final bookmarkRef = FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(uid)
+                                  .collection('bookmarksPenginapan')
+                                  .doc(widget.namaPenginapan);
+
+                              try {
+                                if (isBookmarked) {
+                                  // If the item is already bookmarked, remove it from Firestore
+                                  await bookmarkRef.delete();
+
+                                  // If the delete operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = false;
+                                  });
+                                } else {
+                                  // If the item is not bookmarked, add it to Firestore
+                                  await bookmarkRef.set({
+                                    'namaPenginapan': widget.namaPenginapan,
+                                    'lokasi': lokasi,
+                                    'rating': rating,
+                                    'harga': harga,
+                                    'imageUrl': images.isNotEmpty
+                                        ? images[0]
+                                        : 'default_image_url',
+                                  });
+
+                                  // If the set operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = true;
+                                  });
+                                }
+                              } catch (e) {
+                                // Handle error (e.g., show a Snackbar or print an error message)
+                                print("Error updating bookmark: $e");
+                              }
+                            } else {
+                              // Handle the case when the user is not logged in
+                              print("User not logged in");
+                            }
                           },
                         ),
                       ],
@@ -321,22 +409,17 @@ class _PenginapanPageState extends State<PenginapanPage> {
                         Icon(Icons.star, color: Colors.amber),
                         SizedBox(width: 4.0),
                         Text(
-                          rating.isNotEmpty
-                                  ? rating
-                                  : '0.0',
+                          rating.isNotEmpty ? rating : '0.0',
                           style: TextStyle(
                             fontSize: 18.0,
                           ),
                         ),
                         Spacer(), // Ini adalah bagian yang ditambahkan untuk membuat rata kanan
                         Text(
-                          harga.isNotEmpty
-                                  ? harga
-                                  : 'Rp0',
+                          harga.isNotEmpty ? harga : 'Rp0',
                           style: TextStyle(
                             fontSize: 18.0,
                           ),
-                          
                         ),
                       ],
                     ),

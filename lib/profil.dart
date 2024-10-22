@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
+import 'package:eavell/deskripsi_kuliner.dart';
+import 'package:eavell/deskripsi_penginapan.dart';
+import 'package:eavell/deskripsi_wisata.dart';
 import 'package:eavell/masuk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -58,9 +61,11 @@ class _ProfilPageState extends State<ProfilPage> {
 
   // Fungsi untuk memilih gambar dari galeri atau kamera
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery); // Pilih gambar dari galeri
+    final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery); // Pilih gambar dari galeri
     if (image != null) {
-      await _uploadImageToFirebase(File(image.path)); // Unggah gambar ke Firebase
+      await _uploadImageToFirebase(
+          File(image.path)); // Unggah gambar ke Firebase
     }
   }
 
@@ -109,90 +114,92 @@ class _ProfilPageState extends State<ProfilPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-  preferredSize: Size.fromHeight(58.0), // Tinggi AppBar
-  child: Container(
-    height: 170.0, // Tinggi AppBar
-    width: double.infinity, // Lebar AppBar, mengikuti lebar layar
-    color: Color(0xFF4BBAE9), // Warna latar belakang AppBar
-    child: Row(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-              left: screenWidth * 0.04, top: 35.0), // Mengatur posisi x dan y
-          child: IconButton(
-            icon: Icon(Icons.arrow_back), // Ikon kembali bawaan Flutter
-            color: Colors.white, // Mengubah warna ikon menjadi putih
-            iconSize: screenWidth * 0.07, // Ukuran ikon
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Beranda()),
-              );
-            },
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(
-                top: 35.0), // Menyamakan posisi y dengan ikon kembali
-            child: Center(
-              child: Text(
-                'Profil',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: screenWidth * 0.05,
-                  fontWeight: FontWeight.w500,
+        preferredSize: Size.fromHeight(58.0), // Tinggi AppBar
+        child: Container(
+          height: 170.0, // Tinggi AppBar
+          width: double.infinity, // Lebar AppBar, mengikuti lebar layar
+          color: Color(0xFF4BBAE9), // Warna latar belakang AppBar
+          child: Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                    left: screenWidth * 0.04,
+                    top: 35.0), // Mengatur posisi x dan y
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back), // Ikon kembali bawaan Flutter
+                  color: Colors.white, // Mengubah warna ikon menjadi putih
+                  iconSize: screenWidth * 0.07, // Ukuran ikon
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Beranda()),
+                    );
+                  },
                 ),
               ),
-            ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 35.0), // Menyamakan posisi y dengan ikon kembali
+                  child: Center(
+                    child: Text(
+                      'Profil',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.05,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                    right: screenWidth * 0.04,
+                    top: 35.0), // Mengatur posisi x dan y
+                child: IconButton(
+                  icon: Icon(Icons.logout), // Ikon log out bawaan Flutter
+                  color: Colors.white, // Mengubah warna ikon menjadi putih
+                  iconSize: screenWidth * 0.07, // Ukuran ikon
+                  onPressed: () {
+                    // Menampilkan dialog konfirmasi saat tombol log out ditekan
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Konfirmasi"),
+                          content: Text("Apakah Anda ingin keluar?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                // Aksi saat memilih "Tidak", dialog ditutup
+                                Navigator.of(context).pop();
+                              },
+                              child: Text("Tidak"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // Aksi saat memilih "Ya", arahkan ke halaman masuk
+                                Navigator.of(context).pop(); // Tutup dialog
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Masuk()),
+                                );
+                              },
+                              child: Text("Ya"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(
-              right: screenWidth * 0.04, top: 35.0), // Mengatur posisi x dan y
-          child: IconButton(
-            icon: Icon(Icons.logout), // Ikon log out bawaan Flutter
-            color: Colors.white, // Mengubah warna ikon menjadi putih
-            iconSize: screenWidth * 0.07, // Ukuran ikon
-            onPressed: () {
-              // Menampilkan dialog konfirmasi saat tombol log out ditekan
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text("Konfirmasi"),
-                    content: Text("Apakah Anda ingin keluar?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          // Aksi saat memilih "Tidak", dialog ditutup
-                          Navigator.of(context).pop();
-                        },
-                        child: Text("Tidak"),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Aksi saat memilih "Ya", arahkan ke halaman masuk
-                          Navigator.of(context).pop(); // Tutup dialog
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => Masuk()),
-                          );
-                        },
-                        child: Text("Ya"),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    ),
-  ),
-),
-
+      ),
 
       //Bagian Bawah
       body: CustomScrollView(
@@ -252,7 +259,8 @@ class _ProfilPageState extends State<ProfilPage> {
                         child: CircleAvatar(
                           radius: 48, // Ukuran untuk gambar profil
                           backgroundImage: profileImageUrl.isNotEmpty
-                              ? NetworkImage(profileImageUrl) // Jika URL gambar profil ada, gunakan gambar dari internet
+                              ? NetworkImage(
+                                  profileImageUrl) // Jika URL gambar profil ada, gunakan gambar dari internet
                               : AssetImage('assets/defaultProfile.png')
                                   as ImageProvider, // Jika tidak ada gambar, gunakan gambar default dari assets
                         ),
@@ -286,17 +294,19 @@ class _ProfilPageState extends State<ProfilPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
             sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Wisata Populer'),
+              child: SectionTitle(title: 'Wisata Favorit'),
             ),
           ),
           SliverToBoxAdapter(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('destination')
-                  .orderBy('createdAt',
-                      descending: true) // Urutkan berdasarkan waktu penambahan
-                  .limit(5)
-                  .snapshots(),
+              stream: FirebaseAuth.instance.currentUser != null
+                  ? FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!
+                          .uid) // Use the actual UID of the logged-in user
+                      .collection('bookmarksWisata')
+                      .snapshots()
+                  : null, // Stream is null if no user is logged in
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -307,23 +317,19 @@ class _ProfilPageState extends State<ProfilPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No destinations found'));
+                  return Center();
                 }
 
-                var destinations = snapshot.data!.docs;
+                var bookmarkedDestinationItems = snapshot.data!.docs;
 
-                // Buat list DestinationItem dari data Firestore
                 List<DestinationItem> destinationItems =
-                    destinations.map((doc) {
+                    bookmarkedDestinationItems.map((doc) {
                   var data = doc.data() as Map<String, dynamic>;
 
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // URL gambar default
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Nama default jika null
-                  String location = data['location'] ??
-                      'Unknown Location'; // Lokasi default jika null
+                  // Extract the fields safely
+                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String name = data['namaKuliner'] ?? 'Unnamed';
+                  String location = data['lokasi'] ?? 'Unlocation';
 
                   return DestinationItem(
                     imageUrl: imageUrl,
@@ -339,16 +345,19 @@ class _ProfilPageState extends State<ProfilPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
             sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Kuliner Populer'),
+              child: SectionTitle(title: 'Kuliner Favorit'),
             ),
           ),
           SliverToBoxAdapter(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('culinary')
-                  .orderBy('createdAt', descending: true)
-                  .limit(5)
-                  .snapshots(),
+              stream: FirebaseAuth.instance.currentUser != null
+                  ? FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!
+                          .uid) // Use the actual UID of the logged-in user
+                      .collection('bookmarksKuliner')
+                      .snapshots()
+                  : null, // Stream is null if no user is logged in
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -359,33 +368,21 @@ class _ProfilPageState extends State<ProfilPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No culinarys found'));
+                  return Center();
                 }
 
-                var culinarys = snapshot.data!.docs;
+                var bookmarkedCulinarys = snapshot.data!.docs;
 
-                // Buat list CulinaryItem dari data Firestore
-                List<CulinaryItem> culinaryItems = culinarys.map((doc) {
+                List<CulinaryItem> culinaryItems =
+                    bookmarkedCulinarys.map((doc) {
                   var data = doc.data() as Map<String, dynamic>;
 
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
-
-                  // Konversi rating dari String ke double
-                  double rating;
-                  if (data['rating'] != null) {
-                    try {
-                      rating = double.parse(
-                          data['rating']); // Konversi String ke double
-                    } catch (e) {
-                      rating = 0.0; // Nilai default jika konversi gagal
-                    }
-                  } else {
-                    rating = 0.0; // Nilai default jika null
-                  }
+                  // Extract the fields safely
+                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String name = data['namaKuliner'] ?? 'Unnamed';
+                  double rating =
+                      double.tryParse(data['rating']?.toString() ?? '0.0') ??
+                          0.0;
 
                   return CulinaryItem(
                     imageUrl: imageUrl,
@@ -401,16 +398,19 @@ class _ProfilPageState extends State<ProfilPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(vertical: 12.0),
             sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Penginapan Populer'),
+              child: SectionTitle(title: 'Penginapan Favorit'),
             ),
           ),
           SliverToBoxAdapter(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('accommodation')
-                  .orderBy('createdAt', descending: true)
-                  .limit(5)
-                  .snapshots(),
+              stream: FirebaseAuth.instance.currentUser != null
+                  ? FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!
+                          .uid) // Use the actual UID of the logged-in user
+                      .collection('bookmarksPenginapan')
+                      .snapshots()
+                  : null, // Stream is null if no user is logged in
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -421,36 +421,23 @@ class _ProfilPageState extends State<ProfilPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No  accommodations found'));
+                  return Center();
                 }
 
-                var accommodationns = snapshot.data!.docs;
+                var bookmarkedAccommodations = snapshot.data!.docs;
 
-                // Buat list DestinationItem dari data Firestore
-                List<AccommodationItem> accommodationyItems =
-                    accommodationns.map((doc) {
+                // Create a list of AccommodationItems from the bookmarked data
+                List<AccommodationItem> accommodationItems =
+                    bookmarkedAccommodations.map((doc) {
                   var data = doc.data() as Map<String, dynamic>;
 
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
-
-                  // Konversi rating dari String ke double
-                  double rating;
-                  if (data['rating'] != null) {
-                    try {
-                      rating = double.parse(
-                          data['rating']); // Konversi String ke double
-                    } catch (e) {
-                      rating = 0.0; // Nilai default jika konversi gagal
-                    }
-                  } else {
-                    rating = 0.0; // Nilai default jika null
-                  }
-                  String price =
-                      data['price'] ?? 'Unprice'; // Ganti dengan nilai default
+                  // Extract the fields safely
+                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String name = data['namaPenginapan'] ?? 'Unnamed';
+                  double rating =
+                      double.tryParse(data['rating']?.toString() ?? '0.0') ??
+                          0.0;
+                  String price = data['harga'] ?? 'Rp0';
 
                   return AccommodationItem(
                     imageUrl: imageUrl,
@@ -460,7 +447,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   );
                 }).toList();
 
-                return HorizontalListView(items: accommodationyItems);
+                return HorizontalListView(items: accommodationItems);
               },
             ),
           ),
@@ -528,6 +515,16 @@ class DestinationItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WisataPage(
+                namaWisata: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -613,16 +610,16 @@ class CulinaryItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => DetailKulinerPage(
-        //         name: name,
-        //       ),
-        //     ),
-        //   );
-        // },
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => KulinerPage(
+                namaKuliner: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -703,16 +700,16 @@ class AccommodationItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => DetailPenginapanPage(
-        //         name: name,
-        //       ),
-        //     ),
-        //   );
-        // },
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PenginapanPage(
+                namaPenginapan: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(

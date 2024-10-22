@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -121,6 +122,36 @@ class _KulinerPageState extends State<KulinerPage> {
     }
   }
 
+  Future<void> checkBookmarkStatus() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      String uid = user.uid;
+
+      final bookmarkRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('bookmarksKuliner')
+          .doc(widget.namaKuliner);
+
+      try {
+        // Periksa apakah bookmark ada di Firestore
+        DocumentSnapshot bookmarkSnapshot = await bookmarkRef.get();
+        if (bookmarkSnapshot.exists) {
+          setState(() {
+            isBookmarked = true;
+          });
+        } else {
+          setState(() {
+            isBookmarked = false;
+          });
+        }
+      } catch (e) {
+        print("Error checking bookmark status: $e");
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -128,6 +159,7 @@ class _KulinerPageState extends State<KulinerPage> {
     getMenuFromFirestore();
     loadDataKuliner();
     loadImagesFromFirebase();
+    checkBookmarkStatus();
   }
 
   @override
@@ -293,12 +325,58 @@ class _KulinerPageState extends State<KulinerPage> {
                           icon: Icon(
                             Icons.bookmark,
                             size: 32,
-                            color: isBookmarked ? Colors.pink : Colors.grey,
+                            color: isBookmarked
+                                ? Colors.pink
+                                : Colors
+                                    .grey, // Bookmark color based on the state
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isBookmarked = !isBookmarked;
-                            });
+                          onPressed: () async {
+                            // Get the current logged-in user
+                            User? user = FirebaseAuth.instance.currentUser;
+
+                            if (user != null) {
+                              String uid =
+                                  user.uid; // Get the UID of the logged-in user
+
+                              // Firestore reference to the user's bookmarks collection
+                              final bookmarkRef = FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(uid)
+                                  .collection('bookmarksKuliner')
+                                  .doc(widget.namaKuliner);
+
+                              try {
+                                if (isBookmarked) {
+                                  // If the item is already bookmarked, remove it from Firestore
+                                  await bookmarkRef.delete();
+
+                                  // If the delete operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = false;
+                                  });
+                                } else {
+                                  // If the item is not bookmarked, add it to Firestore
+                                  await bookmarkRef.set({
+                                    'namaKuliner': widget.namaKuliner,
+                                    'rating': rating,
+                                    'imageUrl': images.isNotEmpty
+                                        ? images[0]
+                                        : 'default_image_url',
+                                  });
+
+                                  // If the set operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = true;
+                                  });
+                                }
+                              } catch (e) {
+                                // Handle error (e.g., show a Snackbar or print an error message)
+                                print("Error updating bookmark: $e");
+                              }
+                            } else {
+                              // Handle the case when the user is not logged in
+                              print("User not logged in");
+                            }
                           },
                         ),
                       ],

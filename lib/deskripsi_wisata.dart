@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -70,11 +71,42 @@ class _WisataPageState extends State<WisataPage> {
     }
   }
 
+  Future<void> checkBookmarkStatus() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      String uid = user.uid;
+
+      final bookmarkRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('bookmarksWisata')
+          .doc(widget.namaWisata);
+
+      try {
+        // Periksa apakah bookmark ada di Firestore
+        DocumentSnapshot bookmarkSnapshot = await bookmarkRef.get();
+        if (bookmarkSnapshot.exists) {
+          setState(() {
+            isBookmarked = true;
+          });
+        } else {
+          setState(() {
+            isBookmarked = false;
+          });
+        }
+      } catch (e) {
+        print("Error checking bookmark status: $e");
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     loadDataWisata();
     loadImagesFromFirebase();
+    checkBookmarkStatus();
   }
 
   @override
@@ -201,7 +233,7 @@ class _WisataPageState extends State<WisataPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            "Pulau Rubiah",
+                           widget.namaWisata,
                             style: TextStyle(
                               fontSize: 20.0,
                               fontWeight: FontWeight.w600,
@@ -217,14 +249,60 @@ class _WisataPageState extends State<WisataPage> {
                           icon: Icon(
                             Icons.bookmark,
                             size: 32,
-                            color: isBookmarked ? Colors.pink : Colors.grey,
+                            color: isBookmarked
+                                ? Colors.pink
+                                : Colors
+                                    .grey, // Bookmark color based on the state
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isBookmarked = !isBookmarked;
-                            });
+                          onPressed: () async {
+                            // Get the current logged-in user
+                            User? user = FirebaseAuth.instance.currentUser;
+
+                            if (user != null) {
+                              String uid =
+                                  user.uid; // Get the UID of the logged-in user
+
+                              // Firestore reference to the user's bookmarks collection
+                              final bookmarkRef = FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(uid)
+                                  .collection('bookmarksWisata')
+                                  .doc(widget.namaWisata);
+
+                              try {
+                                if (isBookmarked) {
+                                  // If the item is already bookmarked, remove it from Firestore
+                                  await bookmarkRef.delete();
+
+                                  // If the delete operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = false;
+                                  });
+                                } else {
+                                  // If the item is not bookmarked, add it to Firestore
+                                  await bookmarkRef.set({
+                                    'namaKuliner': widget.namaWisata,
+                                    'lokasi': lokasi,
+                                    'imageUrl': images.isNotEmpty
+                                        ? images[0]
+                                        : 'default_image_url',
+                                  });
+
+                                  // If the set operation is successful, update the state
+                                  setState(() {
+                                    isBookmarked = true;
+                                  });
+                                }
+                              } catch (e) {
+                                // Handle error (e.g., show a Snackbar or print an error message)
+                                print("Error updating bookmark: $e");
+                              }
+                            } else {
+                              // Handle the case when the user is not logged in
+                              print("User not logged in");
+                            }
                           },
-                        ),
+                        )
                       ],
                     ),
                     SizedBox(height: 8.0),

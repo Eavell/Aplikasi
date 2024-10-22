@@ -137,7 +137,7 @@ class _ProfilPageState extends State<ProfilPage> {
                 top: 35.0), // Menyamakan posisi y dengan ikon kembali
             child: Center(
               child: Text(
-                'Paket Travel',
+                'Profil',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: screenWidth * 0.05,
@@ -202,7 +202,7 @@ class _ProfilPageState extends State<ProfilPage> {
               alignment: Alignment.center,
               children: [
                 Container(
-                  height: 300,
+                  height: 230,
                   color: Colors.white,
                 ),
                 Positioned(
@@ -284,7 +284,7 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
           ),
           SliverPadding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+            padding: EdgeInsets.symmetric(vertical: 12.0),
             sliver: SliverToBoxAdapter(
               child: SectionTitle(title: 'Wisata Populer'),
             ),

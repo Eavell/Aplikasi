@@ -3,7 +3,6 @@ import 'package:eavell/jadwalKapal.dart';
 import 'package:eavell/kuliner.dart';
 import 'package:eavell/penginapan.dart';
 import 'package:eavell/profil.dart';
-import 'package:eavell/splashScreen.dart';
 import 'package:eavell/wisata.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -20,29 +19,39 @@ class Beranda extends StatefulWidget {
 class _BerandaState extends State<Beranda> {
   String userName = ''; // Untuk menyimpan nama pengguna
   String profileImageUrl = ''; // Untuk menyimpan URL gambar profil
+  bool isSearching = false; // State untuk mode pencarian
+  List<DocumentSnapshot> searchResults = []; // Hasil pencarian
+  TextEditingController searchController = TextEditingController(); // Kontroler untuk input pencarian
+  String searchText = "";
+
+ @override
+  void dispose() {
+    // Dispose controller yang benar
+    searchController.dispose();
+    super.dispose();
+  }
+
 
   @override
   void initState() {
     super.initState();
-    _getUserName(); // Ambil nama pengguna
-    _getProfileData(); // Ambil gambar profil
+    _getUserName();
+    _getProfileData();
+    
   }
 
   // Fungsi untuk mengambil nama pengguna dari Firestore
   Future<void> _getUserName() async {
     try {
-      // Ambil UID pengguna yang sedang login
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        // Ambil data dari Firestore menggunakan UID pengguna
         DocumentSnapshot userData = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
 
         setState(() {
-          // Ambil nama dari Firestore dan simpan dalam variabel
           userName = userData['name'];
         });
       }
@@ -56,25 +65,77 @@ class _BerandaState extends State<Beranda> {
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        // Ambil data pengguna dari Firestore menggunakan UID
         DocumentSnapshot userData = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
 
         setState(() {
-          // Ambil nama dari Firestore
           userName = userData['name'];
-
-          // Periksa apakah 'profileImageUrl' ada dan tidak null, jika tidak ada gunakan gambar default
           profileImageUrl =
-              userData['profileImageUrl'] ?? ''; // Kosong jika belum diatur
+              userData['profileImageUrl'] ?? '';
         });
       }
     } catch (e) {
       print('Error getting profile data: $e');
     }
   }
+
+  // Fungsi untuk melakukan pencarian di Firestore
+Future<void> _searchFirestore(String query) async {
+  print("Querying for: $query");
+
+  if (query.isEmpty) {
+    setState(() {
+      searchResults = [];
+    });
+    return;
+  }
+
+  // Mengubah query ke format yang cocok dengan case field di Firestore
+  String searchQuery = query[0].toUpperCase() + query.substring(1).toLowerCase();
+
+  try {
+    QuerySnapshot destinationResults = await FirebaseFirestore.instance
+        .collection('destination')
+        .where('name', isGreaterThanOrEqualTo: searchQuery)
+        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+        .get();
+
+    QuerySnapshot accommodationResults = await FirebaseFirestore.instance
+        .collection('accommodation')
+        .where('name', isGreaterThanOrEqualTo: searchQuery)
+        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+        .get();
+
+    QuerySnapshot culinaryResults = await FirebaseFirestore.instance
+        .collection('culinary')
+        .where('name', isGreaterThanOrEqualTo: searchQuery)
+        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+        .get();
+
+    print("Destination Results: ${destinationResults.docs.length} found");
+    print("Accommodation Results: ${accommodationResults.docs.length} found");
+    print("Culinary Results: ${culinaryResults.docs.length} found");
+
+    List<DocumentSnapshot> allResults = []
+      ..addAll(destinationResults.docs)
+      ..addAll(accommodationResults.docs)
+      ..addAll(culinaryResults.docs);
+
+    print("Total Results: ${allResults.length} found");
+
+    setState(() {
+      searchResults = allResults;
+    });
+  } catch (e) {
+    print("Error during search: $e");
+  }
+}
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -127,10 +188,9 @@ class _BerandaState extends State<Beranda> {
                       child: CircleAvatar(
                         radius: 30,
                         backgroundImage: profileImageUrl.isNotEmpty
-                            ? NetworkImage(
-                                profileImageUrl) // Gunakan URL jika ada
-                            : AssetImage(
-                                'assets/defaultProfile.png'), // Gambar default jika null atau kosong
+                            ? NetworkImage(profileImageUrl)
+                            : AssetImage('assets/defaultProfile.png')
+                                as ImageProvider,
                       ),
                     ),
                   ],
@@ -140,6 +200,15 @@ class _BerandaState extends State<Beranda> {
                   width: double.infinity,
                   height: 40.0,
                   child: TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        searchText = value.toLowerCase();
+                      });
+                      if (searchText.length > 2) {
+                        _searchFirestore(value); // Hanya panggil pencarian jika input lebih dari 2 karakter
+                      }
+                    },
                     style: TextStyle(
                       fontSize: 14.0,
                       color: Color(0xFFFB6BBC4),
@@ -149,284 +218,318 @@ class _BerandaState extends State<Beranda> {
                       hintText: 'Mau ke mana hari ini?',
                       fillColor: Colors.white,
                       filled: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+                      contentPadding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15.0),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
+                  
                 ),
               ],
             ),
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Stack(
-              children: [
-                Container(
-                  height: 160,
-                  color: Colors.white,
-                ),
-                Container(
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF4BBAE9),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(45.0),
-                      bottomRight: Radius.circular(45.0),
-                    ),
-                  ),
-                  padding: EdgeInsets.all(16.0),
-                ),
-                Positioned(
-                  top: 20,
-                  left: 25,
-                  right: 25,
-                  child: Container(
-                    height: 132,
-                    width: 306,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 8.0,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12.0,
-                          horizontal:
-                              12.0), // Menambahkan padding atas, kanan, dan kiri
-                      child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween, // Rata kanan kiri
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Rata atas
-                        children: [
-                          CategoryItem(
-                            imagePath:
-                                'jadwal kapal.png', // Sesuaikan dengan path di Firebase Storage
-                            label: 'Jadwal \nKapal',
-                          ),
-                          CategoryItem(
-                            imagePath: 'penginapan.png',
-                            label: 'Penginapan',
-                          ),
-                          CategoryItem(
-                            imagePath: 'wisata.png',
-                            label: 'Wisata',
-                          ),
-                          CategoryItem(
-                            imagePath: 'paket perjalanan.png',
-                            label: 'Paket \nPerjalanan',
-                          ),
-                          CategoryItem(
-                            imagePath: 'kuliner.png',
-                            label: 'Kuliner',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Wisata Populer'),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('destination')
-                  .orderBy('createdAt',
-                      descending: true) // Urutkan berdasarkan waktu penambahan
-                  .limit(5)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No destinations found'));
-                }
-
-                var destinations = snapshot.data!.docs;
-
-                // Buat list DestinationItem dari data Firestore
-                List<DestinationItem> destinationItems =
-                    destinations.map((doc) {
-                  var data = doc.data() as Map<String, dynamic>;
-
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // URL gambar default
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Nama default jika null
-                  String location = data['location'] ??
-                      'Unknown Location'; // Lokasi default jika null
-
-                  return DestinationItem(
-                    imageUrl: imageUrl,
-                    name: name,
-                    location: location,
-                  );
-                }).toList();
-
-                return HorizontalListView(items: destinationItems);
-              },
-            ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(vertical: 12.0),
-            sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Kuliner Populer'),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('culinary')
-                  .orderBy('createdAt', descending: true)
-                  .limit(5)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No culinarys found'));
-                }
-
-                var culinarys = snapshot.data!.docs;
-
-                // Buat list CulinaryItem dari data Firestore
-                List<CulinaryItem> culinaryItems = culinarys.map((doc) {
-                  var data = doc.data() as Map<String, dynamic>;
-
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
-
-                  // Konversi rating dari String ke double
-                  double rating;
-                  if (data['rating'] != null) {
-                    try {
-                      rating = double.parse(
-                          data['rating']); // Konversi String ke double
-                    } catch (e) {
-                      rating = 0.0; // Nilai default jika konversi gagal
-                    }
-                  } else {
-                    rating = 0.0; // Nilai default jika null
-                  }
-
-                  return CulinaryItem(
-                    imageUrl: imageUrl,
-                    name: name,
-                    rating: rating,
-                  );
-                }).toList();
-
-                return HorizontalListView(items: culinaryItems);
-              },
-            ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(vertical: 12.0),
-            sliver: SliverToBoxAdapter(
-              child: SectionTitle(title: 'Penginapan Populer'),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('accommodation')
-                  .orderBy('createdAt', descending: true)
-                  .limit(5)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No  accommodations found'));
-                }
-
-                var accommodationns = snapshot.data!.docs;
-
-                // Buat list DestinationItem dari data Firestore
-                List<AccommodationItem> accommodationyItems =
-                    accommodationns.map((doc) {
-                  var data = doc.data() as Map<String, dynamic>;
-
-                  // Periksa apakah field ada dan tidak null
-                  String imageUrl = data['imageUrl'] ??
-                      'default_image_url'; // Ganti dengan URL gambar default jika perlu
-                  String name =
-                      data['name'] ?? 'Unnamed'; // Ganti dengan nilai default
-
-                  // Konversi rating dari String ke double
-                  double rating;
-                  if (data['rating'] != null) {
-                    try {
-                      rating = double.parse(
-                          data['rating']); // Konversi String ke double
-                    } catch (e) {
-                      rating = 0.0; // Nilai default jika konversi gagal
-                    }
-                  } else {
-                    rating = 0.0; // Nilai default jika null
-                  }
-                  String price =
-                      data['price'] ?? 'Unprice'; // Ganti dengan nilai default
-
-                  return AccommodationItem(
-                    imageUrl: imageUrl,
-                    name: name,
-                    rating: rating,
-                    price: price,
-                  );
-                }).toList();
-
-                return HorizontalListView(items: accommodationyItems);
-              },
-            ),
-          ),
-        ],
-      ),
+      body: isSearching
+          ? _buildSearchResults() // Jika pencarian aktif, tampilkan hasil
+          : _buildBody(), // Jika tidak, tampilkan body utama
     );
   }
+
+  Widget _buildSearchResults() {
+    if (searchResults.isEmpty) {
+      return Center(
+        child: Text('Tidak ada hasil ditemukan.'),
+      );
+    }
+    return ListView.builder(
+      itemCount: searchResults.length,
+      itemBuilder: (context, index) {
+        var data = searchResults[index].data() as Map<String, dynamic>;
+        return ListTile(
+          title: Text(data['fieldName']), // Sesuaikan dengan field yang ditampilkan
+          subtitle: Text(data['fieldDescription']),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody() {
+  return CustomScrollView(
+    slivers: [
+      SliverToBoxAdapter(
+        child: Stack(
+          children: [
+            Container(
+              height: 160,
+              color: Colors.white,
+            ),
+            Container(
+              height: 90,
+              decoration: BoxDecoration(
+                color: Color(0xFF4BBAE9),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(45.0),
+                  bottomRight: Radius.circular(45.0),
+                ),
+              ),
+              padding: EdgeInsets.all(16.0),
+            ),
+            Positioned(
+              top: 20,
+              left: 25,
+              right: 25,
+              child: Container(
+                height: 132,
+                width: 306,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 8.0,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CategoryItem(
+                        imagePath: 'jadwal kapal.png',
+                        label: 'Jadwal \nKapal',
+                      ),
+                      CategoryItem(
+                        imagePath: 'penginapan.png',
+                        label: 'Penginapan',
+                      ),
+                      CategoryItem(
+                        imagePath: 'wisata.png',
+                        label: 'Wisata',
+                      ),
+                      CategoryItem(
+                        imagePath: 'paket perjalanan.png',
+                        label: 'Paket \nPerjalanan',
+                      ),
+                      CategoryItem(
+                        imagePath: 'kuliner.png',
+                        label: 'Kuliner',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      SliverPadding(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(
+            title: 'Wisata', // Ubah judul berdasarkan status pencarian
+          ),
+        ),
+      ),
+
+      SliverToBoxAdapter(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: (searchText.isEmpty)
+            ? FirebaseFirestore.instance
+                .collection('destination')
+                .orderBy('createdAt', descending: true)
+                .limit(5)
+                .snapshots()
+            : FirebaseFirestore.instance
+                .collection('destination')
+                .orderBy('name')
+                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
+                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
+                .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text(''));
+            }
+
+            var destinations = snapshot.data!.docs;
+
+            List<DestinationItem> destinationItems = destinations.map((doc) {
+              var data = doc.data() as Map<String, dynamic>;
+
+              String imageUrl = data['imageUrl'] ?? 'default_image_url';
+              String name = data['name'] ?? 'Unnamed';
+              String location = data['location'] ?? 'Unknown Location';
+
+              return DestinationItem(
+                imageUrl: imageUrl,
+                name: name,
+                location: location,
+              );
+            }).toList();
+
+            return HorizontalListView(items: destinationItems);
+          },
+        ),
+      ),
+      SliverPadding(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(
+            title:'Kuliner', // Ubah judul berdasarkan status pencarian
+          ),
+        ),
+      ),
+
+      SliverToBoxAdapter(
+        child: StreamBuilder<QuerySnapshot>(
+          stream: (searchText.isEmpty)
+            ? FirebaseFirestore.instance
+                .collection('culinary')
+                .orderBy('createdAt', descending: true)
+                .limit(5)
+                .snapshots()
+            : FirebaseFirestore.instance
+                .collection('culinary')
+                .orderBy('name')
+                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
+                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
+                .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text(''));
+            }
+
+            var culinarys = snapshot.data!.docs;
+
+            List<CulinaryItem> culinaryItems = culinarys.map((doc) {
+              var data = doc.data() as Map<String, dynamic>;
+
+              String imageUrl = data['imageUrl'] ?? 'default_image_url';
+              String name = data['name'] ?? 'Unnamed';
+
+              double rating;
+              if (data['rating'] != null) {
+                try {
+                  rating = double.parse(data['rating']);
+                } catch (e) {
+                  rating = 0.0;
+                }
+              } else {
+                rating = 0.0;
+              }
+
+              return CulinaryItem(
+                imageUrl: imageUrl,
+                name: name,
+                rating: rating,
+              );
+            }).toList();
+
+            return HorizontalListView(items: culinaryItems);
+          },
+        ),
+      ),
+      SliverPadding(
+        padding: EdgeInsets.symmetric(vertical: 16.0),
+        sliver: SliverToBoxAdapter(
+          child: SectionTitle(
+            title:'Penginapan', // Ubah judul berdasarkan status pencarian
+          ),
+        ),
+      ),
+
+      SliverToBoxAdapter(
+      child: StreamBuilder<QuerySnapshot>(
+        stream: (searchText.isEmpty)
+            ? FirebaseFirestore.instance
+                .collection('accommodation')
+                .orderBy('createdAt', descending: true)
+                .limit(5)
+                .snapshots()
+            : FirebaseFirestore.instance
+                .collection('accommodation')
+                .orderBy('name')
+                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
+                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
+                .snapshots(),
+        builder: (context, snapshot) {
+          print("Querying for: $searchText");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text(''));
+          }
+
+          var accommodations = snapshot.data!.docs;
+
+          List<AccommodationItem> accommodationItems = accommodations.map((doc) {
+            var data = doc.data() as Map<String, dynamic>;
+
+            String imageUrl = data['imageUrl'] ?? 'default_image_url';
+            String name = data['name'] ?? 'Unnamed';
+
+            double rating;
+            if (data['rating'] != null) {
+              try {
+                rating = double.parse(data['rating']);
+              } catch (e) {
+                rating = 0.0;
+              }
+            } else {
+              rating = 0.0;
+            }
+
+            String price = data['price'] ?? 'Unprice';
+
+            return AccommodationItem(
+              imageUrl: imageUrl,
+              name: name,
+              rating: rating,
+              price: price,
+            );
+          }).toList();
+
+          return HorizontalListView(items: accommodationItems);
+        },
+      ),
+    ),
+
+    ],
+  );
 }
+
+}
+
+
 
 class CategoryItem extends StatelessWidget {
   final String imagePath; // Ubah menjadi path dari Firebase Storage

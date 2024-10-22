@@ -64,23 +64,26 @@ class _PaketTravelState extends State<PaketTravel> {
               SizedBox(height: screenWidth * 0.03),
               TravelPackageCard(
                 imagePath: 'assets/diamond.png',
-                packageName: 'Paket Platinum',
+                packageName: 'Paket Diamond',
                 packagePrice: 'Rp 950.000 - Rp 1.600.000',
                 screenWidth: screenWidth,
+                description: 'Deskripsi Paket Diamond',
               ),
               SizedBox(height: screenWidth * 0.05), // Jarak antara Box 1 dan Box 2
               TravelPackageCard(
                 imagePath: 'assets/gold.png',
                 packageName: 'Paket Gold',
-                packagePrice: 'Rp 950.000 - Rp 1.600.000',
+                packagePrice: 'Rp 550.000 - Rp 950.000 ',
                 screenWidth: screenWidth,
+                description: 'Deskripsi Paket Gold',
               ),
               SizedBox(height: screenWidth * 0.05), // Jarak antara Box 2 dan Box 3
               TravelPackageCard(
                 imagePath: 'assets/silver.png',
                 packageName: 'Paket Silver',
-                packagePrice: 'Rp 950.000 - Rp 1.600.000',
+                packagePrice: 'Rp 250.000 - Rp 550.000',
                 screenWidth: screenWidth,
+                description: 'Deskripsi Paket Silver',
               ),
             ],
           ),
@@ -94,12 +97,14 @@ class TravelPackageCard extends StatelessWidget {
   final String packageName;
   final String packagePrice;
   final double screenWidth;
+  final String description;
 
   const TravelPackageCard({
     required this.imagePath,
     required this.packageName,
     required this.packagePrice,
     required this.screenWidth,
+    required this.description,
   });
 
   @override
@@ -125,7 +130,7 @@ class TravelPackageCard extends StatelessWidget {
             ),
             child: ElevatedButton(
               onPressed: () {
-                Navigator.push( context, MaterialPageRoute(builder: (context) => DeskripsiPaketPage()),);
+                Navigator.push( context, MaterialPageRoute(builder: (context) => DeskripsiPaketPage(imagePath : imagePath, packageName : packageName, packagePrice : packagePrice, description : description)),);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Warna latar belakang

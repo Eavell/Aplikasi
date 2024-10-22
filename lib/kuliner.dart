@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eavell/beranda.dart';
 import 'package:flutter/material.dart';
+import 'deskripsi_kuliner.dart';
 
 class Kuliner extends StatefulWidget {
   const Kuliner({Key? key}) : super(key: key);
@@ -9,9 +11,14 @@ class Kuliner extends StatefulWidget {
 }
 
 class _KulinerState extends State<Kuliner> {
+  // Firestore instance
+  final CollectionReference _culinaryCollection =
+      FirebaseFirestore.instance.collection('deskripsi_kuliner');
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -61,40 +68,35 @@ class _KulinerState extends State<Kuliner> {
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: VerticalGridView(
-              items: [
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'Montana Nasi Goreng',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'RM Murah Raya',
-                  rating: 4.3,
-                ),
-                CulinaryItem(
-                  assetPath: 'assets/montana.png',
-                  name: 'Nasi Gulai Kambing Yah Tad',
-                  rating: 4.3,
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _culinaryCollection.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text("Tidak ada data kuliner tersedia."));
+          }
+
+          // Convert the query snapshot into a list of widgets
+          List<Widget> culinaryItems = snapshot.data!.docs.map((doc) {
+            Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+            return CulinaryItem(
+              assetPath: data['imageUrl'] ?? '',
+              name: data['nama'] ?? 'Unknown',
+              rating: (data['rating'] is String) ? double.parse(data['rating']) : data['rating'].toDouble(),
+            );
+          }).toList();
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: VerticalGridView(items: culinaryItems),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -141,16 +143,16 @@ class CulinaryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // onTap: () {
-      //   Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => DetailKulinerPage(
-      //         name: name,
-      //       ),
-      //     ),
-      //   );
-      // },
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => KulinerPage(
+              namaKuliner: name,
+            ),
+          ),
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -171,7 +173,7 @@ class CulinaryItem extends StatelessWidget {
                 topLeft: Radius.circular(8.0),
                 topRight: Radius.circular(8.0),
               ),
-              child: Image.asset(assetPath,
+              child: Image.network(assetPath,
                   fit: BoxFit.cover, height: 160, width: double.infinity),
             ),
             Padding(

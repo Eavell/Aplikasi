@@ -1,21 +1,134 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class KulinerPage extends StatefulWidget {
+  final String namaKuliner; // Tambahkan parameter untuk nama kuliner
+
+  KulinerPage({required this.namaKuliner}); // Constructor menerima namaKuliner
+
   @override
   _KulinerPageState createState() => _KulinerPageState();
 }
 
 class _KulinerPageState extends State<KulinerPage> {
   final PageController _pageController = PageController();
-  final List<String> images = [
-    'assets/images/montana.png',
-    'assets/images/montana2.png',
-    'assets/images/montana3.png',
-    'assets/images/montana4.png'
-  ];
+  List<String> images = [];
+  String alamat = '';
+  String rating = '';
+  String harga = '';
+  List<String> jamBukaItems = [];
+  List<String> menumakan = [];
 
   int currentPage = 0;
   bool isBookmarked = false;
+  
+  Future<void> loadImagesFromFirebase() async {
+    // Nama folder sesuai dengan nama paket yang dipilih oleh user
+    String selectedPaket = widget.namaKuliner; // Misal widget.paketName adalah 'Diamond', 'Gold', atau 'Silver'
+    String folderPath = 'culinary/$selectedPaket/';
+
+    try {
+      final storageRef = FirebaseStorage.instance.ref().child(folderPath);
+      final listResult = await storageRef.listAll();
+
+      List<String> imageUrls = [];
+      for (var item in listResult.items) {
+        // Mendapatkan URL download dari setiap file di folder
+        String downloadUrl = await item.getDownloadURL();
+        // print("Download URL: $downloadUrl"); // Tambahkan ini untuk debug
+        imageUrls.add(downloadUrl);
+      }
+
+      setState(() {
+        images = imageUrls; // Mengisi imagesGallery dengan URL gambar dari Firebase
+      });
+    } catch (e) {
+      print("Failed to load images: $e");
+    }
+  }
+  Future<void> loadDataKuliner() async {
+  try {
+    // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+    DocumentSnapshot kulinerSnapshot = await FirebaseFirestore.instance
+        .collection('deskripsi_kuliner')
+        .doc(widget.namaKuliner)
+        .get();
+
+    // Mengecek apakah data ada
+    if (kulinerSnapshot.exists) {
+      setState(() {
+        // Ambil data field 'alamat', 'rating', dan 'harga'
+        alamat = kulinerSnapshot.get('alamat') ?? 'Alamat tidak tersedia';
+        rating = kulinerSnapshot.get('rating') ?? 'Rating tidak tersedia';
+        harga = kulinerSnapshot.get('harga') ?? 'Harga tidak tersedia';
+      });
+    } else {
+      print('Dokumen tidak ditemukan');
+    }
+  } catch (e) {
+    print("Error fetching data: $e");
+  }
+}
+
+
+  // Fungsi untuk mengambil data dari Firestore
+  Future<void> getJamBukaFromFirestore() async {
+    try {
+      DocumentSnapshot kulinerData = await FirebaseFirestore.instance
+          .collection('deskripsi_kuliner')
+          .doc(widget.namaKuliner)
+          .get();
+
+      if (kulinerData.exists) {
+        setState(() {
+          jamBukaItems = [];
+          for (int i = 1; i <= 7; i++) {
+            String fieldName = 'jam_buka_$i';
+            String? jamBuka = kulinerData.get(fieldName);
+            if (jamBuka != null) {
+              jamBukaItems.add(jamBuka); // Simpan jam buka dalam format String
+            }
+          }
+        });
+      }
+    } catch (e) {
+      print('Error mengambil jam buka: $e');
+    }
+  }
+
+  Future<void> getMenuFromFirestore() async {
+    try {
+      DocumentSnapshot kulinerData = await FirebaseFirestore.instance
+          .collection('deskripsi_kuliner')
+          .doc(widget.namaKuliner)
+          .get();
+
+      if (kulinerData.exists) {
+        setState(() {
+          menumakan = [];
+          for (int i = 1; i <= 10; i++) {
+            String fieldName = 'menu_$i';
+            String? menu = kulinerData.get(fieldName);
+            if (menu != null) {
+              menumakan.add(menu); // Simpan menu dalam format String
+            }
+          }
+        });
+      }
+    } catch (e) {
+      print('Error mengambil menu: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getJamBukaFromFirestore();
+    getMenuFromFirestore();
+    loadDataKuliner();
+    loadImagesFromFirebase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +154,7 @@ class _KulinerPageState extends State<KulinerPage> {
                           return Container(
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage(image),
+                                image: NetworkImage(image),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -74,14 +187,16 @@ class _KulinerPageState extends State<KulinerPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start, // Atur sesuai kebutuhan Anda (dalam hal ini, MainAxisAlignment.start untuk rata kiri)
-                        crossAxisAlignment: CrossAxisAlignment.start, // Ini yang akan membuat konten menjadi rata atas
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(Icons.location_on, color: Colors.black54),
                           SizedBox(width: 4.0),
                           Expanded(
                             child: Text(
-                              'Jl. Oentong Surapati, Sukakarya, Sabang',
+                              alamat.isNotEmpty
+                                  ? alamat
+                                  : 'Alamat tidak tersedia',
                               style: TextStyle(
                                 fontSize: 16.0,
                                 color: Colors.black54,
@@ -99,11 +214,16 @@ class _KulinerPageState extends State<KulinerPage> {
                         ),
                       ),
                       SizedBox(height: 8.0),
+                      // Menampilkan jam buka dari Firestore
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          menuItem('Senin - Minggu', '16:00-23:00'),
-                        ],
+                        children: jamBukaItems.map((menu) {
+                          // Split the menu string into name and price
+                          var parts = menu.split(', ');
+                          var menuName = parts[0];
+                          var price = parts.length > 1 ? parts[1] : '...'; // Default price if not available
+                          return menuItem(menuName, price);
+                        }).toList(),
                       ),
                       SizedBox(height: 20.0),
                       Text(
@@ -114,31 +234,25 @@ class _KulinerPageState extends State<KulinerPage> {
                         ),
                       ),
                       SizedBox(height: 8.0),
+                      // Menampilkan menu dari Firestore
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          menuItem('Mie Goreng Seafood', 'Rp 15.000'),
-                          menuItem('Nasi / Mie Goreng Biasa', 'Rp 10.000'),
-                          menuItem('Ayam Penyet Nasi', 'Rp 20.000'),
-                          menuItem('Nasi Goreng Seafood', 'Rp 15.000'),
-                          menuItem('Mie Goreng Seafood', 'Rp 15.000'),
-                          menuItem('Nasi / Mie Goreng Biasa', 'Rp 10.000'),
-                          menuItem('Ayam Penyet Nasi', 'Rp 20.000'),
-                          menuItem('Nasi Goreng Seafood', 'Rp 15.000'),
-                          menuItem('Mie Goreng Seafood', 'Rp 15.000'),
-                          menuItem('Nasi / Mie Goreng Biasa', 'Rp 10.000'),
-                          menuItem('Ayam Penyet Nasi', 'Rp 20.000'),
-                          menuItem('Nasi Goreng Seafood', 'Rp 15.000'),
-                        ],
+                        children: menumakan.map((menu) {
+                          // Split the menu string into name and price
+                          var parts = menu.split(', ');
+                          var menuName = parts[0];
+                          var price = parts.length > 1 ? parts[1] : 'Rp ...'; // Default price if not available
+                          return menuItem(menuName, price);
+                        }).toList(),
                       ),
-                      SizedBox(height: 30.0),  // Add space at the bottom
+                      SizedBox(height: 30.0),
                     ],
                   ),
                 ),
               ],
             ),
 
-            //KOTAK PUTIH
+            // KOTAK PUTIH
             Positioned(
               top: 260.0,
               left: 40.0,
@@ -163,7 +277,7 @@ class _KulinerPageState extends State<KulinerPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            "Montana Nasi Goreng",
+                            widget.namaKuliner, // Menampilkan nama kuliner yang dikirim
                             style: TextStyle(
                               fontSize: 20.0,
                               fontWeight: FontWeight.w600,
@@ -174,7 +288,7 @@ class _KulinerPageState extends State<KulinerPage> {
                           ),
                         ),
 
-                        //TOMBOL SIMPAN
+                        // TOMBOL SIMPAN
                         IconButton(
                           icon: Icon(
                             Icons.bookmark,
@@ -195,19 +309,21 @@ class _KulinerPageState extends State<KulinerPage> {
                         Icon(Icons.star, color: Colors.amber),
                         SizedBox(width: 4.0),
                         Text(
-                          '4.3',
+                          rating.isNotEmpty
+                                  ? rating
+                                  : '0.0',
                           style: TextStyle(
                             fontSize: 18.0,
                           ),
-                          
                         ),
-                        Spacer(), // Ini adalah bagian yang ditambahkan untuk membuat rata kanan
+                        Spacer(),
                         Text(
-                          'Rp 10.000 - Rp 20.000',
+                          harga.isNotEmpty
+                                  ? harga
+                                  : 'Rp0',
                           style: TextStyle(
                             fontSize: 18.0,
                           ),
-                          
                         ),
                       ],
                     ),
@@ -216,12 +332,12 @@ class _KulinerPageState extends State<KulinerPage> {
               ),
             ),
 
-            //TOMBOL KEMBALI
+            // TOMBOL KEMBALI
             Positioned(
               top: 40.0,
               left: 16.0,
               child: IconButton(
-                icon: Image.asset('assets/images/back_arrow.png'),
+                icon: Image.asset('assets/tombol_kembali.png'),
                 onPressed: () {
                   Navigator.pop(context);
                 },
@@ -233,7 +349,7 @@ class _KulinerPageState extends State<KulinerPage> {
     );
   }
 
-  //ATUR BAGIAN DESKRIPSI
+  // ATUR BAGIAN DESKRIPSI
   Widget menuItem(String name, String price) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -246,7 +362,7 @@ class _KulinerPageState extends State<KulinerPage> {
               color: Colors.black87,
             ),
           ),
-          SizedBox(width: 8.0), // Add some spacing between bullet and text
+          SizedBox(width: 8.0),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

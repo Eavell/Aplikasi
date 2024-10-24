@@ -3,8 +3,7 @@ import 'package:eavell/beranda.dart';
 import 'package:eavell/daftar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Import untuk cache image
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Masuk extends StatefulWidget {
   const Masuk({super.key});
@@ -22,28 +21,14 @@ class _MasukState extends State<Masuk> {
   String _errorMessage = '';
   String? bgImageUrl; // Variable untuk menyimpan URL gambar latar
 
+  Future<void> saveLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true); // Simpan status login
+  }
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBackgroundImage(); // Memuat gambar latar saat inisialisasi
-  }
-
-  // Fungsi untuk memuat gambar latar dari Firebase Storage
-  Future<void> _loadBackgroundImage() async {
-    try {
-      final ref = FirebaseStorage.instance.ref().child('bg login.png'); // Sesuaikan path gambar
-      String url = await ref.getDownloadURL();
-      setState(() {
-        bgImageUrl = url; // Mengatur URL gambar yang diambil
-      });
-    } catch (e) {
-      print('Error loading background image: $e');
-    }
-  }
-
-    Future<String?> _getEmailFromName(String name) async {
+  Future<String?> _getEmailFromName(String name) async {
     try {
       // Cari pengguna di Firestore berdasarkan nama
       QuerySnapshot query = await FirebaseFirestore.instance
@@ -65,13 +50,14 @@ class _MasukState extends State<Masuk> {
     }
   }
 
-    Future<void> _loginWithEmailPassword() async {
+  Future<void> _loginWithEmailPassword() async {
     try {
       String emailOrName = _emailController.text; // Bisa berupa email atau nama
       String? email;
 
       // Cek apakah input adalah email dengan format valid
-      bool isEmail = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(emailOrName);
+      bool isEmail = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+          .hasMatch(emailOrName);
 
       if (isEmail) {
         email = emailOrName; // Input adalah email
@@ -94,6 +80,7 @@ class _MasukState extends State<Masuk> {
       );
 
       // Jika login berhasil, navigasi ke halaman Beranda
+      saveLoginStatus();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Beranda()),
@@ -116,25 +103,18 @@ class _MasukState extends State<Masuk> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
           // Menggunakan CachedNetworkImage untuk background image
-          bgImageUrl == null
-              ? Center(child: CircularProgressIndicator()) // Loader saat memuat
-              : CachedNetworkImage(
-                  imageUrl: bgImageUrl!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  placeholder: (context, url) =>
-                      Center(child: CircularProgressIndicator()), // Loader saat memuat
-                  errorWidget: (context, url, error) =>
-                      Center(child: Icon(Icons.error)), // Error widget jika ada kesalahan
-                ),
+          Image.asset(
+            'assets/bg login.png', // Sesuaikan path gambar di assets
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 100.0),
@@ -173,8 +153,9 @@ class _MasukState extends State<Masuk> {
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        labelText:
-                            _isemailFocused ? null : 'Masukkan Nama Atau Email Anda',
+                        labelText: _isemailFocused
+                            ? null
+                            : 'Masukkan Nama Atau Email Anda',
                         labelStyle: TextStyle(
                           color: Color(0xFFA0A1A8),
                         ),

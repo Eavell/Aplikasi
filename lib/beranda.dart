@@ -21,23 +21,22 @@ class _BerandaState extends State<Beranda> {
   String profileImageUrl = ''; // Untuk menyimpan URL gambar profil
   bool isSearching = false; // State untuk mode pencarian
   List<DocumentSnapshot> searchResults = []; // Hasil pencarian
-  TextEditingController searchController = TextEditingController(); // Kontroler untuk input pencarian
+  TextEditingController searchController =
+      TextEditingController(); // Kontroler untuk input pencarian
   String searchText = "";
 
- @override
+  @override
   void dispose() {
     // Dispose controller yang benar
     searchController.dispose();
     super.dispose();
   }
 
-
   @override
   void initState() {
     super.initState();
     _getUserName();
     _getProfileData();
-    
   }
 
   // Fungsi untuk mengambil nama pengguna dari Firestore
@@ -72,8 +71,7 @@ class _BerandaState extends State<Beranda> {
 
         setState(() {
           userName = userData['name'];
-          profileImageUrl =
-              userData['profileImageUrl'] ?? '';
+          profileImageUrl = userData['profileImageUrl'] ?? '';
         });
       }
     } catch (e) {
@@ -82,60 +80,57 @@ class _BerandaState extends State<Beranda> {
   }
 
   // Fungsi untuk melakukan pencarian di Firestore
-Future<void> _searchFirestore(String query) async {
-  print("Querying for: $query");
+  Future<void> _searchFirestore(String query) async {
+    print("Querying for: $query");
 
-  if (query.isEmpty) {
-    setState(() {
-      searchResults = [];
-    });
-    return;
+    if (query.isEmpty) {
+      setState(() {
+        searchResults = [];
+      });
+      return;
+    }
+
+    // Mengubah query ke format yang cocok dengan case field di Firestore
+    String searchQuery =
+        query[0].toUpperCase() + query.substring(1).toLowerCase();
+
+    try {
+      QuerySnapshot destinationResults = await FirebaseFirestore.instance
+          .collection('destination')
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .get();
+
+      QuerySnapshot accommodationResults = await FirebaseFirestore.instance
+          .collection('accommodation')
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .get();
+
+      QuerySnapshot culinaryResults = await FirebaseFirestore.instance
+          .collection('culinary')
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .get();
+
+      print("Destination Results: ${destinationResults.docs.length} found");
+      print("Accommodation Results: ${accommodationResults.docs.length} found");
+      print("Culinary Results: ${culinaryResults.docs.length} found");
+
+      List<DocumentSnapshot> allResults = []
+        ..addAll(destinationResults.docs)
+        ..addAll(accommodationResults.docs)
+        ..addAll(culinaryResults.docs);
+
+      print("Total Results: ${allResults.length} found");
+
+      setState(() {
+        searchResults = allResults;
+      });
+    } catch (e) {
+      print("Error during search: $e");
+    }
   }
-
-  // Mengubah query ke format yang cocok dengan case field di Firestore
-  String searchQuery = query[0].toUpperCase() + query.substring(1).toLowerCase();
-
-  try {
-    QuerySnapshot destinationResults = await FirebaseFirestore.instance
-        .collection('destination')
-        .where('name', isGreaterThanOrEqualTo: searchQuery)
-        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
-        .get();
-
-    QuerySnapshot accommodationResults = await FirebaseFirestore.instance
-        .collection('accommodation')
-        .where('name', isGreaterThanOrEqualTo: searchQuery)
-        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
-        .get();
-
-    QuerySnapshot culinaryResults = await FirebaseFirestore.instance
-        .collection('culinary')
-        .where('name', isGreaterThanOrEqualTo: searchQuery)
-        .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
-        .get();
-
-    print("Destination Results: ${destinationResults.docs.length} found");
-    print("Accommodation Results: ${accommodationResults.docs.length} found");
-    print("Culinary Results: ${culinaryResults.docs.length} found");
-
-    List<DocumentSnapshot> allResults = []
-      ..addAll(destinationResults.docs)
-      ..addAll(accommodationResults.docs)
-      ..addAll(culinaryResults.docs);
-
-    print("Total Results: ${allResults.length} found");
-
-    setState(() {
-      searchResults = allResults;
-    });
-  } catch (e) {
-    print("Error during search: $e");
-  }
-}
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +201,8 @@ Future<void> _searchFirestore(String query) async {
                         searchText = value.toLowerCase();
                       });
                       if (searchText.length > 2) {
-                        _searchFirestore(value); // Hanya panggil pencarian jika input lebih dari 2 karakter
+                        _searchFirestore(
+                            value); // Hanya panggil pencarian jika input lebih dari 2 karakter
                       }
                     },
                     style: TextStyle(
@@ -218,14 +214,14 @@ Future<void> _searchFirestore(String query) async {
                       hintText: 'Mau ke mana hari ini?',
                       fillColor: Colors.white,
                       filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15.0),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-                  
                 ),
               ],
             ),
@@ -249,7 +245,8 @@ Future<void> _searchFirestore(String query) async {
       itemBuilder: (context, index) {
         var data = searchResults[index].data() as Map<String, dynamic>;
         return ListTile(
-          title: Text(data['fieldName']), // Sesuaikan dengan field yang ditampilkan
+          title: Text(
+              data['fieldName']), // Sesuaikan dengan field yang ditampilkan
           subtitle: Text(data['fieldDescription']),
         );
       },
@@ -257,279 +254,288 @@ Future<void> _searchFirestore(String query) async {
   }
 
   Widget _buildBody() {
-  return CustomScrollView(
-    slivers: [
-      SliverToBoxAdapter(
-        child: Stack(
-          children: [
-            Container(
-              height: 160,
-              color: Colors.white,
-            ),
-            Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: Color(0xFF4BBAE9),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(45.0),
-                  bottomRight: Radius.circular(45.0),
-                ),
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Stack(
+            children: [
+              Container(
+                height: 160,
+                color: Colors.white,
               ),
-              padding: EdgeInsets.all(16.0),
-            ),
-            Positioned(
-              top: 20,
-              left: 25,
-              right: 25,
-              child: Container(
-                height: 132,
-                width: 306,
+              Container(
+                height: 90,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 8.0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  color: Color(0xFF4BBAE9),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(45.0),
+                    bottomRight: Radius.circular(45.0),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12.0, horizontal: 12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CategoryItem(
-                        imagePath: 'jadwal kapal.png',
-                        label: 'Jadwal \nKapal',
-                      ),
-                      CategoryItem(
-                        imagePath: 'penginapan.png',
-                        label: 'Penginapan',
-                      ),
-                      CategoryItem(
-                        imagePath: 'wisata.png',
-                        label: 'Wisata',
-                      ),
-                      CategoryItem(
-                        imagePath: 'paket perjalanan.png',
-                        label: 'Paket \nPerjalanan',
-                      ),
-                      CategoryItem(
-                        imagePath: 'kuliner.png',
-                        label: 'Kuliner',
+                padding: EdgeInsets.all(16.0),
+              ),
+              Positioned(
+                top: 20,
+                left: 25,
+                right: 25,
+                child: Container(
+                  height: 132,
+                  width: 306,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8.0,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CategoryItem(
+                          imagePath: 'jadwal kapal.png',
+                          label: 'Jadwal \nKapal',
+                        ),
+                        CategoryItem(
+                          imagePath: 'penginapan.png',
+                          label: 'Penginapan',
+                        ),
+                        CategoryItem(
+                          imagePath: 'wisata.png',
+                          label: 'Wisata',
+                        ),
+                        CategoryItem(
+                          imagePath: 'paket perjalanan.png',
+                          label: 'Paket \nPerjalanan',
+                        ),
+                        CategoryItem(
+                          imagePath: 'kuliner.png',
+                          label: 'Kuliner',
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
+            ],
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          sliver: SliverToBoxAdapter(
+            child: SectionTitle(
+              title: 'Wisata', // Ubah judul berdasarkan status pencarian
             ),
-          ],
-        ),
-      ),
-      SliverPadding(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
-        sliver: SliverToBoxAdapter(
-          child: SectionTitle(
-            title: 'Wisata', // Ubah judul berdasarkan status pencarian
           ),
         ),
-      ),
+        SliverToBoxAdapter(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: (searchText.isEmpty)
+                ? FirebaseFirestore.instance
+                    .collection('destination')
+                    .orderBy('createdAt', descending: true)
+                    .limit(5)
+                    .snapshots()
+                : FirebaseFirestore.instance
+                    .collection('destination')
+                    .orderBy('name')
+                    .startAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase()
+                  ]).endAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase() +
+                        '\uf8ff'
+                  ]).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-      SliverToBoxAdapter(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: (searchText.isEmpty)
-            ? FirebaseFirestore.instance
-                .collection('destination')
-                .orderBy('createdAt', descending: true)
-                .limit(5)
-                .snapshots()
-            : FirebaseFirestore.instance
-                .collection('destination')
-                .orderBy('name')
-                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
-                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
-                .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text(''));
+              }
 
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(child: Text(''));
-            }
+              var destinations = snapshot.data!.docs;
 
-            var destinations = snapshot.data!.docs;
+              List<DestinationItem> destinationItems = destinations.map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
 
-            List<DestinationItem> destinationItems = destinations.map((doc) {
-              var data = doc.data() as Map<String, dynamic>;
+                String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                String name = data['name'] ?? 'Unnamed';
+                String location = data['location'] ?? 'Unknown Location';
 
-              String imageUrl = data['imageUrl'] ?? 'default_image_url';
-              String name = data['name'] ?? 'Unnamed';
-              String location = data['location'] ?? 'Unknown Location';
+                return DestinationItem(
+                  imageUrl: imageUrl,
+                  name: name,
+                  location: location,
+                );
+              }).toList();
 
-              return DestinationItem(
-                imageUrl: imageUrl,
-                name: name,
-                location: location,
-              );
-            }).toList();
-
-            return HorizontalListView(items: destinationItems);
-          },
-        ),
-      ),
-      SliverPadding(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
-        sliver: SliverToBoxAdapter(
-          child: SectionTitle(
-            title:'Kuliner', // Ubah judul berdasarkan status pencarian
+              return HorizontalListView(items: destinationItems);
+            },
           ),
         ),
-      ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          sliver: SliverToBoxAdapter(
+            child: SectionTitle(
+              title: 'Kuliner', // Ubah judul berdasarkan status pencarian
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: (searchText.isEmpty)
+                ? FirebaseFirestore.instance
+                    .collection('culinary')
+                    .orderBy('createdAt', descending: true)
+                    .limit(5)
+                    .snapshots()
+                : FirebaseFirestore.instance
+                    .collection('culinary')
+                    .orderBy('name')
+                    .startAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase()
+                  ]).endAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase() +
+                        '\uf8ff'
+                  ]).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-      SliverToBoxAdapter(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: (searchText.isEmpty)
-            ? FirebaseFirestore.instance
-                .collection('culinary')
-                .orderBy('createdAt', descending: true)
-                .limit(5)
-                .snapshots()
-            : FirebaseFirestore.instance
-                .collection('culinary')
-                .orderBy('name')
-                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
-                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
-                .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text(''));
+              }
 
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(child: Text(''));
-            }
+              var culinarys = snapshot.data!.docs;
 
-            var culinarys = snapshot.data!.docs;
+              List<CulinaryItem> culinaryItems = culinarys.map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
 
-            List<CulinaryItem> culinaryItems = culinarys.map((doc) {
-              var data = doc.data() as Map<String, dynamic>;
+                String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                String name = data['name'] ?? 'Unnamed';
 
-              String imageUrl = data['imageUrl'] ?? 'default_image_url';
-              String name = data['name'] ?? 'Unnamed';
-
-              double rating;
-              if (data['rating'] != null) {
-                try {
-                  rating = double.parse(data['rating']);
-                } catch (e) {
+                double rating;
+                if (data['rating'] != null) {
+                  try {
+                    rating = double.parse(data['rating']);
+                  } catch (e) {
+                    rating = 0.0;
+                  }
+                } else {
                   rating = 0.0;
                 }
-              } else {
-                rating = 0.0;
-              }
 
-              return CulinaryItem(
-                imageUrl: imageUrl,
-                name: name,
-                rating: rating,
-              );
-            }).toList();
+                return CulinaryItem(
+                  imageUrl: imageUrl,
+                  name: name,
+                  rating: rating,
+                );
+              }).toList();
 
-            return HorizontalListView(items: culinaryItems);
-          },
-        ),
-      ),
-      SliverPadding(
-        padding: EdgeInsets.symmetric(vertical: 16.0),
-        sliver: SliverToBoxAdapter(
-          child: SectionTitle(
-            title:'Penginapan', // Ubah judul berdasarkan status pencarian
+              return HorizontalListView(items: culinaryItems);
+            },
           ),
         ),
-      ),
-
-      SliverToBoxAdapter(
-      child: StreamBuilder<QuerySnapshot>(
-        stream: (searchText.isEmpty)
-            ? FirebaseFirestore.instance
-                .collection('accommodation')
-                .orderBy('createdAt', descending: true)
-                .limit(5)
-                .snapshots()
-            : FirebaseFirestore.instance
-                .collection('accommodation')
-                .orderBy('name')
-                .startAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase()])
-                .endAt([searchText[0].toUpperCase() + searchText.substring(1).toLowerCase() + '\uf8ff'])
-                .snapshots(),
-        builder: (context, snapshot) {
-          print("Querying for: $searchText");
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text(''));
-          }
-
-          var accommodations = snapshot.data!.docs;
-
-          List<AccommodationItem> accommodationItems = accommodations.map((doc) {
-            var data = doc.data() as Map<String, dynamic>;
-
-            String imageUrl = data['imageUrl'] ?? 'default_image_url';
-            String name = data['name'] ?? 'Unnamed';
-
-            double rating;
-            if (data['rating'] != null) {
-              try {
-                rating = double.parse(data['rating']);
-              } catch (e) {
-                rating = 0.0;
+        SliverPadding(
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          sliver: SliverToBoxAdapter(
+            child: SectionTitle(
+              title: 'Penginapan', // Ubah judul berdasarkan status pencarian
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: (searchText.isEmpty)
+                ? FirebaseFirestore.instance
+                    .collection('accommodation')
+                    .orderBy('createdAt', descending: true)
+                    .limit(5)
+                    .snapshots()
+                : FirebaseFirestore.instance
+                    .collection('accommodation')
+                    .orderBy('name')
+                    .startAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase()
+                  ]).endAt([
+                    searchText[0].toUpperCase() +
+                        searchText.substring(1).toLowerCase() +
+                        '\uf8ff'
+                  ]).snapshots(),
+            builder: (context, snapshot) {
+              print("Querying for: $searchText");
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
               }
-            } else {
-              rating = 0.0;
-            }
 
-            String price = data['price'] ?? 'Unprice';
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-            return AccommodationItem(
-              imageUrl: imageUrl,
-              name: name,
-              rating: rating,
-              price: price,
-            );
-          }).toList();
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text(''));
+              }
 
-          return HorizontalListView(items: accommodationItems);
-        },
-      ),
-    ),
+              var accommodations = snapshot.data!.docs;
 
-    ],
-  );
+              List<AccommodationItem> accommodationItems =
+                  accommodations.map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
+
+                String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                String name = data['name'] ?? 'Unnamed';
+
+                double rating;
+                if (data['rating'] != null) {
+                  try {
+                    rating = double.parse(data['rating']);
+                  } catch (e) {
+                    rating = 0.0;
+                  }
+                } else {
+                  rating = 0.0;
+                }
+
+                String price = data['price'] ?? 'Unprice';
+
+                return AccommodationItem(
+                  imageUrl: imageUrl,
+                  name: name,
+                  rating: rating,
+                  price: price,
+                );
+              }).toList();
+
+              return HorizontalListView(items: accommodationItems);
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
-
-}
-
-
 
 class CategoryItem extends StatelessWidget {
   final String imagePath; // Ubah menjadi path dari Firebase Storage
@@ -703,8 +709,7 @@ class DestinationItem extends StatelessWidget {
             children: [
               Image.network(imageUrl,
                   fit: BoxFit.cover,
-                  height: 160,
-                  width: 150), // Menggunakan Image dari URL
+                  width: double.infinity), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -773,7 +778,7 @@ class CulinaryItem extends StatelessWidget {
         //   Navigator.push(
         //     context,
         //     MaterialPageRoute(
-        //       builder: (context) => DetailKulinerPage(
+        //       builder: (context) => deskripsi_kuliner(
         //         name: name,
         //       ),
         //     ),
@@ -797,7 +802,7 @@ class CulinaryItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: 150),
+                  fit: BoxFit.cover, width: double.infinity),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -887,7 +892,7 @@ class AccommodationItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: 150),
+                  fit: BoxFit.cover, width: double.infinity),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(

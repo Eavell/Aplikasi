@@ -1,7 +1,7 @@
+import 'package:eavell/beranda.dart';
 import 'package:eavell/perkenalan.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Import untuk caching gambar
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -11,37 +11,17 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String imageUrl = ''; // URL gambar dari Firebase
-
   @override
   void initState() {
     super.initState();
-    _loadImageFromFirebase();
     Future.delayed(Duration(seconds: 3), () {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                Perkenalan()), // Navigasi ke halaman berikutnya
+                CheckLogin()), // Navigasi ke halaman berikutnya
       );
     });
-  }
-
-  // Fungsi untuk mengambil gambar dari Firebase Storage
-  Future<void> _loadImageFromFirebase() async {
-    try {
-      // Referensi ke gambar di Firebase Storage
-      final ref = FirebaseStorage.instance.ref().child('Splash.png');
-
-      // Ambil URL gambar
-      String url = await ref.getDownloadURL();
-
-      setState(() {
-        imageUrl = url; // Set URL gambar
-      });
-    } catch (e) {
-      print('Error fetching image from Firebase: $e');
-    }
   }
 
   @override
@@ -61,18 +41,42 @@ class _SplashScreenState extends State<SplashScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          imageUrl.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl:
-                      imageUrl, // Menampilkan gambar dari Firebase dengan cache
-                  width: 180,
-                  height: 180,
-                  errorWidget: (context, url, error) =>
-                      Icon(Icons.error), // Jika terjadi error
-                )
-              : CircularProgressIndicator(),
+          Image.asset(
+            'assets/Splash.png', // Menampilkan gambar lokal dari folder assets
+            width: 180,
+            height: 180,
+          ),
         ],
       ),
     );
+  }
+}
+
+
+class CheckLogin extends StatefulWidget {
+  @override
+  _CheckLoginState createState() => _CheckLoginState();
+}
+
+class _CheckLoginState extends State<CheckLogin> {
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Navigasi ke halaman berbeda berdasarkan status login
+    return _isLoggedIn ? Beranda() : Perkenalan();
   }
 }

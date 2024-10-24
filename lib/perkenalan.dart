@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:eavell/masuk.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 
 class Perkenalan extends StatefulWidget {
   const Perkenalan({Key? key}) : super(key: key);
@@ -13,37 +12,13 @@ class Perkenalan extends StatefulWidget {
 class _PerkenalanState extends State<Perkenalan> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-  List<String> imgUrls = []; // List yang akan menampung URL gambar dari Firebase
 
-  @override
-  void initState() {
-    super.initState();
-    _loadImagesFromFirebase();
-  }
-
-  // Fungsi untuk mengambil URL gambar dari Firebase Storage
-  Future<void> _loadImagesFromFirebase() async {
-    try {
-      final storageRef = FirebaseStorage.instance.ref(); 
-      
-      // Ambil seluruh file di folder tertentu (misalnya folder 'perkenalan' di Firebase Storage)
-      final ListResult result = await storageRef.child('perkenalan').listAll();
-      List<String> urls = [];
-      
-      // Loop melalui setiap file dan ambil URL nya
-      for (var ref in result.items) {
-        String url = await ref.getDownloadURL();
-        urls.add(url);
-      }
-      
-      // Jika gambar ditemukan, update state
-      setState(() {
-        imgUrls = urls;
-      });
-    } catch (e) {
-      print('Error fetching images: $e');
-    }
-  }
+  // List yang akan menampung path gambar dari lokal
+  final List<String> imgPaths = [
+    'assets/Perkenalan_1.png',
+    'assets/Perkenalan_2.png',
+    'assets/Perkenalan_3.png',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -52,42 +27,40 @@ class _PerkenalanState extends State<Perkenalan> {
     final screenHeight = mediaQuery.size.height;
 
     return Scaffold(
-      body: imgUrls.isEmpty // Pastikan gambar sudah diambil
-          ? Center(child: CircularProgressIndicator())
-          : PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              children: imgUrls.map((url) {
-                // Sesuaikan teks berdasarkan urutan gambar
-                int index = imgUrls.indexOf(url);
-                String text;
-                if (index == 0) {
-                  text = 'Bersiaplah untuk memulai petualangan yang tak \nterlupakan';
-                } else if (index == 1) {
-                  text = 'Menemukan Keajaiban sejarah dan Kekayaan Budaya di setiap langkahmu';
-                } else {
-                  text = 'Indahnya pemandangan dan lezatnya kuliner lokal yang menggugah selera';
-                }
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: imgPaths.map((path) {
+          // Sesuaikan teks berdasarkan urutan gambar
+          int index = imgPaths.indexOf(path);
+          String text;
+          if (index == 0) {
+            text = 'Bersiaplah untuk memulai petualangan yang tak \nterlupakan';
+          } else if (index == 1) {
+            text = 'Menemukan Keajaiban sejarah dan Kekayaan Budaya di setiap langkahmu';
+          } else {
+            text = 'Indahnya pemandangan dan lezatnya kuliner lokal yang menggugah selera';
+          }
 
-                if (index == imgUrls.length - 1) {
-                  return _buildLastIntroPage(context, screenWidth, screenHeight, url, text);
-                } else {
-                  return _buildIntroPage(context, screenWidth, screenHeight, url, text);
-                }
-              }).toList(),
-            ),
+          if (index == imgPaths.length - 1) {
+            return _buildLastIntroPage(context, screenWidth, screenHeight, path, text);
+          } else {
+            return _buildIntroPage(context, screenWidth, screenHeight, path, text);
+          }
+        }).toList(),
+      ),
     );
   }
 
-  Widget _buildIntroPage(BuildContext context, double screenWidth, double screenHeight, String imageUrl, String text) {
+  Widget _buildIntroPage(BuildContext context, double screenWidth, double screenHeight, String imagePath, String text) {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(imageUrl), // Gambar diambil dari URL Firebase
+          image: AssetImage(imagePath), // Gambar diambil dari lokal (aset)
           fit: BoxFit.cover,
         ),
       ),
@@ -107,11 +80,11 @@ class _PerkenalanState extends State<Perkenalan> {
     );
   }
 
-  Widget _buildLastIntroPage(BuildContext context, double screenWidth, double screenHeight, String imageUrl, String text) {
+  Widget _buildLastIntroPage(BuildContext context, double screenWidth, double screenHeight, String imagePath, String text) {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(imageUrl), // Gambar diambil dari URL Firebase
+          image: AssetImage(imagePath), // Gambar diambil dari lokal (aset)
           fit: BoxFit.cover,
         ),
       ),
@@ -194,7 +167,7 @@ class _PerkenalanState extends State<Perkenalan> {
             right: 10,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
-              children: List.generate(imgUrls.length, (index) {
+              children: List.generate(imgPaths.length, (index) {
                 return Container(
                   width: 8.0,
                   height: 8.0,

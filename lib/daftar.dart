@@ -1,9 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Tambahkan import Firebase Storage
 import 'package:eavell/masuk.dart';
 
 void main() async {
@@ -43,33 +41,7 @@ class _DaftarState extends State<Daftar> {
   bool _isUsernameFocused = false;
   bool _isemailFocused = false;
   bool _isPasswordFocused = false;
-  String _backgroundImageUrl = ''; // Variabel untuk menyimpan URL latar belakang
   String _errorMessage = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBackgroundImage(); // Memanggil method untuk mengambil gambar latar belakang
-  }
-
-  // Method untuk mengambil URL gambar dari Firebase Storage
-  Future<void> _loadBackgroundImage() async {
-    try {
-      // Mengambil URL dari Firebase Storage
-      String url = await FirebaseStorage.instance
-          .ref('bg login.png')
-          .getDownloadURL();
-
-      setState(() {
-        _backgroundImageUrl = url;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Gagal memuat gambar latar belakang.';
-      });
-    }
-  }
-
   // Method untuk registrasi menggunakan Firebase Authentication
   Future<void> _registerWithEmailPassword(String email, String password, String name) async {
   try {
@@ -115,20 +87,12 @@ class _DaftarState extends State<Daftar> {
     return Scaffold(
       body: Stack(
         children: [
-          // Tampilkan gambar latar jika URL sudah diambil
-           if (_backgroundImageUrl.isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: _backgroundImageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              placeholder: (context, url) => Center(
-                child: CircularProgressIndicator(), // Tampilkan loading jika gambar belum diambil
-              ),
-              errorWidget: (context, url, error) => Center(
-                child: Text('Gagal memuat gambar latar belakang'), // Tampilkan pesan jika gagal memuat gambar
-              ),
-            ),
+           Image.asset(
+            'assets/bg login.png', // Sesuaikan path gambar di assets
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 100.0),

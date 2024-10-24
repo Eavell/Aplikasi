@@ -121,22 +121,22 @@ class _JadwalKapalState extends State<JadwalKapal> {
             children: snapshot.data!.docs.map((document) {
               // Mendapatkan data untuk card 1
               String date1 = document['date1'] ?? 'Tanggal Tidak Diketahui';
-              String image1 = document['image1'] ?? 'assets/kapal 1.png'; // Gambar default
+              String image1 = document['image1'];
               String schedule1 = document['schedule1'] ?? 'Jadwal Tidak Diketahui';
 
               // Mendapatkan data untuk card 2 (ini masih berasal dari dokumen yang sama)
               String date2 = document['date2'] ?? 'Tanggal Tidak Diketahui';
-              String image2 = document['image2'] ?? 'assets/kapal 1.png'; // Gambar default
+              String image2 = document['image2'] ; // Gambar default
               String schedule2 = document['schedule2'] ?? 'Jadwal Tidak Diketahui';
 
               // Mendapatkan data untuk card 3
               String date3 = document['date3'] ?? 'Tanggal Tidak Diketahui';
-              String image3 = document['image3'] ?? 'assets/kapal 1.png'; // Gambar default
+              String image3 = document['image3'] ; // Gambar default
               String schedule3 = document['schedule3'] ?? 'Jadwal Tidak Diketahui';
 
               // Mendapatkan data untuk card 4
               String date4 = document['date4'] ?? 'Tanggal Tidak Diketahui';
-              String image4 = document['image4'] ?? 'assets/kapal 1.png'; // Gambar default
+              String image4 = document['image4'] ; // Gambar default
               String schedule4 = document['schedule4'] ?? 'Jadwal Tidak Diketahui';
 
               // Mengembalikan beberapa card dalam Column
@@ -259,17 +259,17 @@ class _JadwalKapalState extends State<JadwalKapal> {
                       children: snapshot.data!.docs.map((document) {
                         // Mendapatkan data untuk card 1
                         String date5 = document['date5'] ?? 'Tanggal Tidak Diketahui';
-                        String image5 = document['image3'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image5 = document['image3'] ; // Gambar default
                         String schedule5 = document['schedule5'] ?? 'Jadwal Tidak Diketahui';
 
                         // Mendapatkan data untuk card 2
                         String date6 = document['date6'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image6 = document['image4'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image6 = document['image4'] ; // Gambar default
                         String schedule6 = document['schedule6'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         // Mendapatkan data untuk card 2
                         String date7 = document['date7'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image7 = document['image5'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image7 = document['image5'] ; // Gambar default
                         String schedule7 = document['schedule7'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         return Column(
@@ -402,20 +402,20 @@ class _JadwalKapalState extends State<JadwalKapal> {
                       children: snapshot.data!.docs.map((document) {
                         // Mendapatkan data untuk card 1
                         String date8 = document['date8'] ?? 'Tanggal Tidak Diketahui';
-                        String image8 = document['image1'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image8 = document['image1'] ; // Gambar default
                         String schedule8 = document['schedule8'] ?? 'Jadwal Tidak Diketahui';
 
                         // Mendapatkan data untuk card 2
                         String date9 = document['date9'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image9 = document['image2'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image9 = document['image2'] ; // Gambar default
                         String schedule9 = document['schedule9'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         String date10 = document['date10'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image10 = document['image1'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image10 = document['image1'] ; // Gambar default
                         String schedule10 = document['schedule10'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         String date11 = document['date11'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image11 = document['image2'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image11 = document['image2'] ; // Gambar default
                         String schedule11 = document['schedule11'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         return Column(
@@ -539,17 +539,17 @@ class _JadwalKapalState extends State<JadwalKapal> {
                       children: snapshot.data!.docs.map((document) {
                         // Mendapatkan data untuk card 1
                         String date12 = document['date12'] ?? 'Tanggal Tidak Diketahui';
-                        String image12 = document['image3'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image12 = document['image3'] ; // Gambar default
                         String schedule12 = document['schedule12'] ?? 'Jadwal Tidak Diketahui';
 
                         // Mendapatkan data untuk card 2
                         String date13 = document['date13'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image13 = document['image4'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image13 = document['image4'] ; // Gambar default
                         String schedule13 = document['schedule13'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         // Mendapatkan data untuk card 2
                         String date14 = document['date14'] ?? 'Tanggal Tidak Diketahui'; // Pastikan ini field yang benar
-                        String image14 = document['image5'] ?? 'assets/kapal 1.png'; // Gambar default
+                        String image14 = document['image5'] ; // Gambar default
                         String schedule14 = document['schedule14'] ?? 'Jadwal Tidak Diketahui'; // Pastikan ini field yang benar
 
                         return Column(

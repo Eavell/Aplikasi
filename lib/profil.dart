@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({Key? key}) : super(key: key);
@@ -108,6 +109,11 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
+  Future<void> setLogoutStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isLoggedIn'); // Hapus status login
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -180,12 +186,14 @@ class _ProfilPageState extends State<ProfilPage> {
                             TextButton(
                               onPressed: () {
                                 // Aksi saat memilih "Ya", arahkan ke halaman masuk
-                                Navigator.of(context).pop(); // Tutup dialog
+                                Navigator.of(context).pop();
+                                // Tutup dialog
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => Masuk()),
                                 );
+                                setLogoutStatus();
                               },
                               child: Text("Ya"),
                             ),

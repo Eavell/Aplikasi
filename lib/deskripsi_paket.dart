@@ -330,7 +330,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
               top: 40.0,
               left: 16.0,
               child: IconButton(
-                icon: Image.asset('assets/tombol_kembali.png'),
+                icon: Image.asset('assets/tombolKembali.png'),
                 onPressed: () {
                   Navigator.pop(context);
                 },

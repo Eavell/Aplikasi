@@ -208,9 +208,11 @@ class _BerandaState extends State<Beranda> {
                 Container(
                   width: double.infinity,
                   height: 40.0,
-                  child: GestureDetector( // Agar keyboard tidak muncul otomatis
+                  child: GestureDetector(
+                    // Agar keyboard tidak muncul otomatis
                     onTap: () {
-                      _focusNode.requestFocus(); // Memfokuskan TextField saat diklik
+                      _focusNode
+                          .requestFocus(); // Memfokuskan TextField saat diklik
                     },
                     child: TextField(
                       focusNode: _focusNode, // Tetapkan FocusNode ke TextField
@@ -220,7 +222,8 @@ class _BerandaState extends State<Beranda> {
                           searchText = value.toLowerCase();
                         });
                         if (searchText.length > 2) {
-                          _searchFirestore(value); // Hanya panggil pencarian jika input lebih dari 2 karakter
+                          _searchFirestore(
+                              value); // Hanya panggil pencarian jika input lebih dari 2 karakter
                         }
                       },
                       style: TextStyle(
@@ -233,7 +236,7 @@ class _BerandaState extends State<Beranda> {
                         fillColor: Colors.white,
                         filled: true,
                         contentPadding: EdgeInsets.symmetric(
-                          vertical: 5.0, 
+                          vertical: 5.0,
                           horizontal: 15.0,
                         ),
                         border: OutlineInputBorder(
@@ -358,7 +361,9 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('deskripsi_wisata').snapshots(), // Ambil semua data
+            stream: FirebaseFirestore.instance
+                .collection('deskripsi_wisata')
+                .snapshots(), // Ambil semua data
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -371,7 +376,8 @@ class _BerandaState extends State<Beranda> {
                 // Jika searchText kosong, filter berdasarkan rating
                 if (searchText.isEmpty) {
                   if (data['rating'] != null) {
-                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    double rating = double.tryParse(data['rating']) ??
+                        0.0; // Pastikan rating di-convert ke double
                     return rating >= 4.5; // Filter rating >= 4.5
                   }
                   return false;
@@ -393,14 +399,14 @@ class _BerandaState extends State<Beranda> {
 
               // Jika destinationItem kosong, tampilkan teks bahwa tidak ada data yang ditemukan
               if (destinationItem.isEmpty) {
-                return Center(child: Text("Tidak ada data Wisata yang tersedia."));
+                return Center(
+                    child: Text("Tidak ada data Wisata yang tersedia."));
               }
 
               return HorizontalListView(items: destinationItem);
             },
           ),
         ),
-        
         SliverPadding(
           padding: EdgeInsets.symmetric(vertical: 16.0),
           sliver: SliverToBoxAdapter(
@@ -411,7 +417,9 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('deskripsi_kuliner').snapshots(), // Ambil semua data
+            stream: FirebaseFirestore.instance
+                .collection('deskripsi_kuliner')
+                .snapshots(), // Ambil semua data
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -424,7 +432,8 @@ class _BerandaState extends State<Beranda> {
                 // Jika searchText kosong, filter berdasarkan rating
                 if (searchText.isEmpty) {
                   if (data['rating'] != null) {
-                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    double rating = double.tryParse(data['rating']) ??
+                        0.0; // Pastikan rating di-convert ke double
                     return rating >= 4.5; // Filter rating >= 4.5
                   }
                   return false;
@@ -446,14 +455,14 @@ class _BerandaState extends State<Beranda> {
 
               // Jika culinaryItems kosong, tampilkan teks bahwa tidak ada data yang ditemukan
               if (culinaryItems.isEmpty) {
-                return Center(child: Text("Tidak ada data Kuliner yang tersedia."));
+                return Center(
+                    child: Text("Tidak ada data Kuliner yang tersedia."));
               }
 
               return HorizontalListView(items: culinaryItems);
             },
           ),
         ),
-
         SliverPadding(
           padding: EdgeInsets.symmetric(vertical: 16.0),
           sliver: SliverToBoxAdapter(
@@ -464,20 +473,24 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('deskripsi_penginapan').snapshots(), // Ambil semua data
+            stream: FirebaseFirestore.instance
+                .collection('deskripsi_penginapan')
+                .snapshots(), // Ambil semua data
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
 
               // Lakukan pencarian manual di sisi klien berdasarkan input user atau rating
-              List<Widget> accommodationItems = snapshot.data!.docs.where((doc) {
+              List<Widget> accommodationItems =
+                  snapshot.data!.docs.where((doc) {
                 Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
                 // Jika searchText kosong, filter berdasarkan rating
                 if (searchText.isEmpty) {
                   if (data['rating'] != null) {
-                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    double rating = double.tryParse(data['rating']) ??
+                        0.0; // Pastikan rating di-convert ke double
                     return rating >= 4.5; // Filter rating >= 4.5
                   }
                   return false;
@@ -500,7 +513,8 @@ class _BerandaState extends State<Beranda> {
 
               // Jika accommodationItems kosong, tampilkan teks bahwa tidak ada data yang ditemukan
               if (accommodationItems.isEmpty) {
-                return Center(child: Text("Tidak ada data Penginapan yang tersedia."));
+                return Center(
+                    child: Text("Tidak ada data Penginapan yang tersedia."));
               }
 
               return HorizontalListView(items: accommodationItems);
@@ -692,10 +706,14 @@ class DestinationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover,
-                  height: 160,
-                  width: double.infinity), // Menggunakan Image dari URL
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -787,8 +805,14 @@ class CulinaryItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: double.infinity),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -877,8 +901,14 @@ class AccommodationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: double.infinity),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(

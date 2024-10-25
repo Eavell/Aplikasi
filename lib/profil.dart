@@ -550,10 +550,14 @@ class DestinationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover,
-                  height: 160,
-                  width: 150), // Menggunakan Image dari URL
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -645,8 +649,14 @@ class CulinaryItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: 150),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -735,8 +745,14 @@ class AccommodationItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(imageUrl,
-                  fit: BoxFit.cover, height: 160, width: 150),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  topRight: Radius.circular(8.0),
+                ),
+                child: Image.network(imageUrl,
+                    fit: BoxFit.cover, height: 160, width: double.infinity),
+              ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(

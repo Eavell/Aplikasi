@@ -85,7 +85,7 @@ class _PenginapanState extends State<Penginapan> {
             return AccommodationItem(
               assetPath: data['imageUrl'] ?? '',
               name: data['nama'] ?? 'Unknown',
-              rating: (data['rating'] is String) ? double.parse(data['rating']) : data['rating'].toDouble(),
+              rating: data['rating'] ?? 'Unknown',
               price: data['harga'] ?? 'Unknown',
               // price: (data['harga'] is String) ? double.parse(data['harga']) : data['harga'].toDouble(),
             );
@@ -134,7 +134,7 @@ class VerticalGridView extends StatelessWidget {
 class AccommodationItem extends StatelessWidget {
   final String assetPath;
   final String name;
-  final double rating;
+  final String rating;
   final String price;
 
   AccommodationItem({
@@ -200,7 +200,7 @@ class AccommodationItem extends StatelessWidget {
                         Icon(Icons.star, size: 12, color: Colors.yellow),
                         SizedBox(width: 4),
                         Text(
-                          '$rating',
+                          rating,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,

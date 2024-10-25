@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WisataPage extends StatefulWidget {
   final String namaWisata;
@@ -16,6 +17,7 @@ class _WisataPageState extends State<WisataPage> {
   final PageController _pageController = PageController();
   List<String> images = [];
   String lokasi= '';
+  String linklokasi = '';
   String rating = '';
   String deskripsi = '';
 
@@ -71,6 +73,28 @@ class _WisataPageState extends State<WisataPage> {
     }
   }
 
+  Future<void> loadLinkLokasi() async {
+    try {
+      // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+      DocumentSnapshot wisataSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_wisata')
+          .doc(widget.namaWisata)
+          .get();
+
+      // Mengecek apakah data ada
+      if (wisataSnapshot.exists) {
+        setState(() {
+          // Ambil field 'linkalamat' dari dokumen
+          linklokasi = wisataSnapshot.get('link_lokasi') ?? 'Link tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching linkalamat: $e");
+    }
+  }
+
   Future<void> checkBookmarkStatus() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -107,6 +131,7 @@ class _WisataPageState extends State<WisataPage> {
     loadDataWisata();
     loadImagesFromFirebase();
     checkBookmarkStatus();
+    loadLinkLokasi();
   }
 
   @override
@@ -172,13 +197,25 @@ class _WisataPageState extends State<WisataPage> {
                           Icon(Icons.location_on, color: Colors.black54),
                           SizedBox(width: 4.0),
                           Expanded(
-                            child: Text(
-                              lokasi.isNotEmpty
-                                  ? lokasi
-                                  : 'Alamat tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black54,
+                            child: InkWell( // Gunakan InkWell agar teks bisa ditekan
+                              onTap: () async {
+                                // Cek apakah alamat valid dan buat Uri
+                                if (linklokasi.isNotEmpty) {
+                                  final Uri url = Uri.parse(linklokasi); // Gunakan Uri untuk URL
+                                  // Cek apakah bisa meluncurkan URL dengan launchUrl
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url); // Luncurkan Google Maps dengan alamat
+                                  } else {
+                                    print('Tidak dapat membuka alamat ini');
+                                  }
+                                }
+                              },
+                              child: Text(
+                                lokasi.isNotEmpty ? lokasi: 'Alamat tidak tersedia',
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  color: Colors.black54, // Ubah warna teks menjadi biru seperti link
+                                ),
                               ),
                             ),
                           ),
@@ -311,7 +348,7 @@ class _WisataPageState extends State<WisataPage> {
                         Icon(Icons.star, color: Colors.amber),
                         SizedBox(width: 4.0),
                         Text(
-                          '4.6',
+                          rating,
                           style: TextStyle(
                             fontSize: 18.0,
                           ),

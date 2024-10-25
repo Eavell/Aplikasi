@@ -8,6 +8,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'deskripsi_penginapan.dart';
+import 'deskripsi_wisata.dart';
+import 'deskripsi_kuliner.dart';
 
 class Beranda extends StatefulWidget {
   const Beranda({Key? key}) : super(key: key);
@@ -24,10 +27,21 @@ class _BerandaState extends State<Beranda> {
   TextEditingController searchController =
       TextEditingController(); // Kontroler untuk input pencarian
   String searchText = "";
+  final FocusNode _focusNode = FocusNode(); // FocusNode untuk TextField
+
+  final CollectionReference _culinaryCollection =
+      FirebaseFirestore.instance.collection('deskripsi_kuliner');
+
+  final CollectionReference _accommodationCollection =
+      FirebaseFirestore.instance.collection('deskripsi_penginapan');
+
+  final CollectionReference _destinationCollection =
+      FirebaseFirestore.instance.collection('deskripsi_wisata');
 
   @override
   void dispose() {
     // Dispose controller yang benar
+    _focusNode.dispose(); // Hapus FocusNode ketika widget dihancurkan
     searchController.dispose();
     super.dispose();
   }
@@ -96,21 +110,21 @@ class _BerandaState extends State<Beranda> {
 
     try {
       QuerySnapshot destinationResults = await FirebaseFirestore.instance
-          .collection('destination')
-          .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .collection('deskripsi_wisata')
+          .where('nama', isGreaterThanOrEqualTo: searchQuery)
+          .where('nama', isLessThanOrEqualTo: searchQuery + '\uf8ff')
           .get();
 
       QuerySnapshot accommodationResults = await FirebaseFirestore.instance
-          .collection('accommodation')
-          .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .collection('deskripsi_penginapan')
+          .where('nama', isGreaterThanOrEqualTo: searchQuery)
+          .where('nama', isLessThanOrEqualTo: searchQuery + '\uf8ff')
           .get();
 
       QuerySnapshot culinaryResults = await FirebaseFirestore.instance
-          .collection('culinary')
-          .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+          .collection('deskripsi_kuliner')
+          .where('nama', isGreaterThanOrEqualTo: searchQuery)
+          .where('nama', isLessThanOrEqualTo: searchQuery + '\uf8ff')
           .get();
 
       print("Destination Results: ${destinationResults.docs.length} found");
@@ -194,31 +208,38 @@ class _BerandaState extends State<Beranda> {
                 Container(
                   width: double.infinity,
                   height: 40.0,
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        searchText = value.toLowerCase();
-                      });
-                      if (searchText.length > 2) {
-                        _searchFirestore(
-                            value); // Hanya panggil pencarian jika input lebih dari 2 karakter
-                      }
+                  child: GestureDetector( // Agar keyboard tidak muncul otomatis
+                    onTap: () {
+                      _focusNode.requestFocus(); // Memfokuskan TextField saat diklik
                     },
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      color: Color(0xFFFB6BBC4),
-                      fontWeight: FontWeight.w300,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Mau ke mana hari ini?',
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15.0),
-                        borderSide: BorderSide.none,
+                    child: TextField(
+                      focusNode: _focusNode, // Tetapkan FocusNode ke TextField
+                      controller: searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          searchText = value.toLowerCase();
+                        });
+                        if (searchText.length > 2) {
+                          _searchFirestore(value); // Hanya panggil pencarian jika input lebih dari 2 karakter
+                        }
+                      },
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        color: Color(0xFFFB6BBC4),
+                        fontWeight: FontWeight.w300,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Mau ke mana hari ini?',
+                        fillColor: Colors.white,
+                        filled: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 5.0, 
+                          horizontal: 15.0,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
@@ -337,56 +358,49 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: (searchText.isEmpty)
-                ? FirebaseFirestore.instance
-                    .collection('destination')
-                    .orderBy('createdAt', descending: true)
-                    .limit(5)
-                    .snapshots()
-                : FirebaseFirestore.instance
-                    .collection('destination')
-                    .orderBy('name')
-                    .startAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase()
-                  ]).endAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase() +
-                        '\uf8ff'
-                  ]).snapshots(),
+            stream: FirebaseFirestore.instance.collection('deskripsi_wisata').snapshots(), // Ambil semua data
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+              // Lakukan pencarian manual di sisi klien berdasarkan input user atau rating
+              List<Widget> destinationItem = snapshot.data!.docs.where((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text(''));
-              }
+                // Jika searchText kosong, filter berdasarkan rating
+                if (searchText.isEmpty) {
+                  if (data['rating'] != null) {
+                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    return rating >= 4.5; // Filter rating >= 4.5
+                  }
+                  return false;
+                }
 
-              var destinations = snapshot.data!.docs;
-
-              List<DestinationItem> destinationItems = destinations.map((doc) {
-                var data = doc.data() as Map<String, dynamic>;
-
-                String imageUrl = data['imageUrl'] ?? 'default_image_url';
-                String name = data['name'] ?? 'Unnamed';
-                String location = data['location'] ?? 'Unknown Location';
+                // Jika searchText ada, tampilkan semua data tanpa filter rating
+                String name = data['nama'].toString().toLowerCase();
+                String searchLowerCase = searchText.toLowerCase();
+                return name.contains(searchLowerCase);
+              }).map((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
                 return DestinationItem(
-                  imageUrl: imageUrl,
-                  name: name,
-                  location: location,
+                  imageUrl: data['imageUrl'] ?? '',
+                  name: data['nama'] ?? 'Unknown',
+                  location: data['lokasi'] ?? 'Unknown',
                 );
               }).toList();
 
-              return HorizontalListView(items: destinationItems);
+              // Jika destinationItem kosong, tampilkan teks bahwa tidak ada data yang ditemukan
+              if (destinationItem.isEmpty) {
+                return Center(child: Text("Tidak ada data Wisata yang tersedia."));
+              }
+
+              return HorizontalListView(items: destinationItem);
             },
           ),
         ),
+        
         SliverPadding(
           padding: EdgeInsets.symmetric(vertical: 16.0),
           sliver: SliverToBoxAdapter(
@@ -397,66 +411,49 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: (searchText.isEmpty)
-                ? FirebaseFirestore.instance
-                    .collection('culinary')
-                    .orderBy('createdAt', descending: true)
-                    .limit(5)
-                    .snapshots()
-                : FirebaseFirestore.instance
-                    .collection('culinary')
-                    .orderBy('name')
-                    .startAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase()
-                  ]).endAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase() +
-                        '\uf8ff'
-                  ]).snapshots(),
+            stream: FirebaseFirestore.instance.collection('deskripsi_kuliner').snapshots(), // Ambil semua data
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+              // Lakukan pencarian manual di sisi klien berdasarkan input user atau rating
+              List<Widget> culinaryItems = snapshot.data!.docs.where((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text(''));
-              }
-
-              var culinarys = snapshot.data!.docs;
-
-              List<CulinaryItem> culinaryItems = culinarys.map((doc) {
-                var data = doc.data() as Map<String, dynamic>;
-
-                String imageUrl = data['imageUrl'] ?? 'default_image_url';
-                String name = data['name'] ?? 'Unnamed';
-
-                double rating;
-                if (data['rating'] != null) {
-                  try {
-                    rating = double.parse(data['rating']);
-                  } catch (e) {
-                    rating = 0.0;
+                // Jika searchText kosong, filter berdasarkan rating
+                if (searchText.isEmpty) {
+                  if (data['rating'] != null) {
+                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    return rating >= 4.5; // Filter rating >= 4.5
                   }
-                } else {
-                  rating = 0.0;
+                  return false;
                 }
 
+                // Jika searchText ada, tampilkan semua data tanpa filter rating
+                String name = data['nama'].toString().toLowerCase();
+                String searchLowerCase = searchText.toLowerCase();
+                return name.contains(searchLowerCase);
+              }).map((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
                 return CulinaryItem(
-                  imageUrl: imageUrl,
-                  name: name,
-                  rating: rating,
+                  imageUrl: data['imageUrl'] ?? '',
+                  name: data['nama'] ?? 'Unknown',
+                  rating: data['rating'] ?? '0.0',
                 );
               }).toList();
+
+              // Jika culinaryItems kosong, tampilkan teks bahwa tidak ada data yang ditemukan
+              if (culinaryItems.isEmpty) {
+                return Center(child: Text("Tidak ada data Kuliner yang tersedia."));
+              }
 
               return HorizontalListView(items: culinaryItems);
             },
           ),
         ),
+
         SliverPadding(
           padding: EdgeInsets.symmetric(vertical: 16.0),
           sliver: SliverToBoxAdapter(
@@ -467,66 +464,44 @@ class _BerandaState extends State<Beranda> {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder<QuerySnapshot>(
-            stream: (searchText.isEmpty)
-                ? FirebaseFirestore.instance
-                    .collection('accommodation')
-                    .orderBy('createdAt', descending: true)
-                    .limit(5)
-                    .snapshots()
-                : FirebaseFirestore.instance
-                    .collection('accommodation')
-                    .orderBy('name')
-                    .startAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase()
-                  ]).endAt([
-                    searchText[0].toUpperCase() +
-                        searchText.substring(1).toLowerCase() +
-                        '\uf8ff'
-                  ]).snapshots(),
+            stream: FirebaseFirestore.instance.collection('deskripsi_penginapan').snapshots(), // Ambil semua data
             builder: (context, snapshot) {
-              print("Querying for: $searchText");
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+              // Lakukan pencarian manual di sisi klien berdasarkan input user atau rating
+              List<Widget> accommodationItems = snapshot.data!.docs.where((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text(''));
-              }
-
-              var accommodations = snapshot.data!.docs;
-
-              List<AccommodationItem> accommodationItems =
-                  accommodations.map((doc) {
-                var data = doc.data() as Map<String, dynamic>;
-
-                String imageUrl = data['imageUrl'] ?? 'default_image_url';
-                String name = data['name'] ?? 'Unnamed';
-
-                double rating;
-                if (data['rating'] != null) {
-                  try {
-                    rating = double.parse(data['rating']);
-                  } catch (e) {
-                    rating = 0.0;
+                // Jika searchText kosong, filter berdasarkan rating
+                if (searchText.isEmpty) {
+                  if (data['rating'] != null) {
+                    double rating = double.tryParse(data['rating']) ?? 0.0; // Pastikan rating di-convert ke double
+                    return rating >= 4.5; // Filter rating >= 4.5
                   }
-                } else {
-                  rating = 0.0;
+                  return false;
                 }
 
-                String price = data['price'] ?? 'Unprice';
+                // Jika searchText ada, tampilkan semua data tanpa filter rating
+                String name = data['nama'].toString().toLowerCase();
+                String searchLowerCase = searchText.toLowerCase();
+                return name.contains(searchLowerCase);
+              }).map((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
                 return AccommodationItem(
-                  imageUrl: imageUrl,
-                  name: name,
-                  rating: rating,
-                  price: price,
+                  imageUrl: data['imageUrl'] ?? '',
+                  name: data['nama'] ?? 'Unknown',
+                  rating: data['rating'] ?? '0.0',
+                  price: data['harga'] ?? 'Rp0',
                 );
               }).toList();
+
+              // Jika accommodationItems kosong, tampilkan teks bahwa tidak ada data yang ditemukan
+              if (accommodationItems.isEmpty) {
+                return Center(child: Text("Tidak ada data Penginapan yang tersedia."));
+              }
 
               return HorizontalListView(items: accommodationItems);
             },
@@ -690,6 +665,16 @@ class DestinationItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WisataPage(
+                namaWisata: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -709,6 +694,7 @@ class DestinationItem extends StatelessWidget {
             children: [
               Image.network(imageUrl,
                   fit: BoxFit.cover,
+                  height: 160,
                   width: double.infinity), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
@@ -758,7 +744,7 @@ class DestinationItem extends StatelessWidget {
 class CulinaryItem extends StatelessWidget {
   final String imageUrl;
   final String name;
-  final double rating;
+  final String rating;
 
   CulinaryItem({
     required this.imageUrl,
@@ -774,16 +760,16 @@ class CulinaryItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => deskripsi_kuliner(
-        //         name: name,
-        //       ),
-        //     ),
-        //   );
-        // },
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => KulinerPage(
+                namaKuliner: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -802,7 +788,7 @@ class CulinaryItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(imageUrl,
-                  fit: BoxFit.cover, width: double.infinity),
+                  fit: BoxFit.cover, height: 160, width: double.infinity),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -822,7 +808,7 @@ class CulinaryItem extends StatelessWidget {
                           Icon(Icons.star, size: 12, color: Colors.yellow),
                           SizedBox(width: 4),
                           Text(
-                            '$rating',
+                            rating,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
@@ -846,7 +832,7 @@ class CulinaryItem extends StatelessWidget {
 class AccommodationItem extends StatelessWidget {
   final String imageUrl;
   final String name;
-  final double rating;
+  final String rating;
   final String price;
 
   AccommodationItem({
@@ -864,16 +850,16 @@ class AccommodationItem extends StatelessWidget {
         left: 4.0,
       ),
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //       builder: (context) => DetailPenginapanPage(
-        //         name: name,
-        //       ),
-        //     ),
-        //   );
-        // },
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PenginapanPage(
+                namaPenginapan: name,
+              ),
+            ),
+          );
+        },
         child: Container(
           width: 142,
           decoration: BoxDecoration(
@@ -892,7 +878,7 @@ class AccommodationItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Image.network(imageUrl,
-                  fit: BoxFit.cover, width: double.infinity),
+                  fit: BoxFit.cover, height: 160, width: double.infinity),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
                 child: Text(
@@ -912,7 +898,7 @@ class AccommodationItem extends StatelessWidget {
                           Icon(Icons.star, size: 12, color: Colors.yellow),
                           SizedBox(width: 4),
                           Text(
-                            '$rating',
+                            rating,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PenginapanPage extends StatefulWidget {
   final String namaPenginapan;
@@ -16,6 +17,7 @@ class _PenginapanPageState extends State<PenginapanPage> {
   final PageController _pageController = PageController();
   List<String> images = [];
   String lokasi = '';
+  String linklokasi = '';
   String rating = '';
   String harga = '';
   String deskripsi = '';
@@ -75,6 +77,28 @@ class _PenginapanPageState extends State<PenginapanPage> {
       }
     } catch (e) {
       print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> loadLinkLokasi() async {
+    try {
+      // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+      DocumentSnapshot penginapanSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_penginapan')
+          .doc(widget.namaPenginapan)
+          .get();
+
+      // Mengecek apakah data ada
+      if (penginapanSnapshot.exists) {
+        setState(() {
+          // Ambil field 'linkalamat' dari dokumen
+          linklokasi = penginapanSnapshot.get('link_lokasi') ?? 'Link tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching linkalamat: $e");
     }
   }
 
@@ -165,6 +189,7 @@ class _PenginapanPageState extends State<PenginapanPage> {
     getWaktuCICOFromFirestore();
     loadImagesFromFirebase();
     checkBookmarkStatus();
+    loadLinkLokasi();
   }
 
   @override
@@ -232,13 +257,25 @@ class _PenginapanPageState extends State<PenginapanPage> {
                           Icon(Icons.location_on, color: Colors.black54),
                           SizedBox(width: 4.0),
                           Expanded(
-                            child: Text(
-                              lokasi.isNotEmpty
-                                  ? lokasi
-                                  : 'Lokasi tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black54,
+                            child: InkWell( // Gunakan InkWell agar teks bisa ditekan
+                              onTap: () async {
+                                // Cek apakah alamat valid dan buat Uri
+                                if (linklokasi.isNotEmpty) {
+                                  final Uri url = Uri.parse(linklokasi); // Gunakan Uri untuk URL
+                                  // Cek apakah bisa meluncurkan URL dengan launchUrl
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url); // Luncurkan Google Maps dengan alamat
+                                  } else {
+                                    print('Tidak dapat membuka alamat ini');
+                                  }
+                                }
+                              },
+                              child: Text(
+                                lokasi.isNotEmpty ? lokasi: 'Alamat tidak tersedia',
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  color: Colors.black54, // Ubah warna teks menjadi biru seperti link
+                                ),
                               ),
                             ),
                           ),

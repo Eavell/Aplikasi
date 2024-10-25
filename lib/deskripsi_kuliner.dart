@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class KulinerPage extends StatefulWidget {
   final String namaKuliner; // Tambahkan parameter untuk nama kuliner
@@ -16,6 +18,7 @@ class _KulinerPageState extends State<KulinerPage> {
   final PageController _pageController = PageController();
   List<String> images = [];
   String alamat = '';
+  String linkalamat = '';
   String rating = '';
   String harga = '';
   List<String> jamBukaItems = [];
@@ -72,6 +75,27 @@ class _KulinerPageState extends State<KulinerPage> {
     }
   }
 
+  Future<void> loadLinkAlamat() async {
+    try {
+      // Mengambil data dari Firestore berdasarkan 'deskripsi_kuliner' dan namaKuliner
+      DocumentSnapshot kulinerSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_kuliner')
+          .doc(widget.namaKuliner)
+          .get();
+
+      // Mengecek apakah data ada
+      if (kulinerSnapshot.exists) {
+        setState(() {
+          // Ambil field 'linkalamat' dari dokumen
+          linkalamat = kulinerSnapshot.get('link_alamat') ?? 'Link tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching linkalamat: $e");
+    }
+  }
 
   // Fungsi untuk mengambil data dari Firestore
   Future<void> getJamBukaFromFirestore() async {
@@ -160,6 +184,7 @@ class _KulinerPageState extends State<KulinerPage> {
     loadDataKuliner();
     loadImagesFromFirebase();
     checkBookmarkStatus();
+    loadLinkAlamat();
   }
 
   @override
@@ -225,13 +250,25 @@ class _KulinerPageState extends State<KulinerPage> {
                           Icon(Icons.location_on, color: Colors.black54),
                           SizedBox(width: 4.0),
                           Expanded(
-                            child: Text(
-                              alamat.isNotEmpty
-                                  ? alamat
-                                  : 'Alamat tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black54,
+                            child: InkWell( // Gunakan InkWell agar teks bisa ditekan
+                              onTap: () async {
+                                // Cek apakah alamat valid dan buat Uri
+                                if (linkalamat.isNotEmpty) {
+                                  final Uri url = Uri.parse(linkalamat); // Gunakan Uri untuk URL
+                                  // Cek apakah bisa meluncurkan URL dengan launchUrl
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url); // Luncurkan Google Maps dengan alamat
+                                  } else {
+                                    print('Tidak dapat membuka alamat ini');
+                                  }
+                                }
+                              },
+                              child: Text(
+                                alamat.isNotEmpty ? alamat : 'Alamat tidak tersedia',
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  color: Colors.black54, // Ubah warna teks menjadi biru seperti link
+                                ),
                               ),
                             ),
                           ),
@@ -415,7 +452,7 @@ class _KulinerPageState extends State<KulinerPage> {
               top: 40.0,
               left: 16.0,
               child: IconButton(
-                icon: Image.asset('assets/tombolKembali.png'),
+                icon: Image.asset('assets/tombol_kembali.png'),
                 onPressed: () {
                   Navigator.pop(context);
                 },

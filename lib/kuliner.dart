@@ -85,7 +85,7 @@ class _KulinerState extends State<Kuliner> {
             return CulinaryItem(
               assetPath: data['imageUrl'] ?? '',
               name: data['nama'] ?? 'Unknown',
-              rating: (data['rating'] is String) ? double.parse(data['rating']) : data['rating'].toDouble(),
+              rating: data['rating'] ?? 'Unknown',
             );
           }).toList();
 
@@ -132,7 +132,7 @@ class VerticalGridView extends StatelessWidget {
 class CulinaryItem extends StatelessWidget {
   final String assetPath;
   final String name;
-  final double rating;
+  final String rating;
 
   CulinaryItem({
     required this.assetPath,
@@ -195,7 +195,7 @@ class CulinaryItem extends StatelessWidget {
                         Icon(Icons.star, size: 12, color: Colors.yellow),
                         SizedBox(width: 4),
                         Text(
-                          '$rating',
+                          rating,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,

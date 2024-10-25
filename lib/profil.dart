@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:eavell/beranda.dart';
-import 'package:eavell/deskripsi_kuliner.dart';
-import 'package:eavell/deskripsi_penginapan.dart';
-import 'package:eavell/deskripsi_wisata.dart';
-import 'package:eavell/masuk.dart';
+import 'package:TripNest/beranda.dart';
+import 'package:TripNest/deskripsi_kuliner.dart';
+import 'package:TripNest/deskripsi_penginapan.dart';
+import 'package:TripNest/deskripsi_wisata.dart';
+import 'package:TripNest/masuk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';

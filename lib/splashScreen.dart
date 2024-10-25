@@ -1,5 +1,5 @@
-import 'package:eavell/beranda.dart';
-import 'package:eavell/perkenalan.dart';
+import 'package:TripNest/beranda.dart';
+import 'package:TripNest/perkenalan.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

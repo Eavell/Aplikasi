@@ -1,4 +1,4 @@
-import 'package:eavell/JadwalKapal.dart';
+import 'package:TripNest/JadwalKapal.dart';
 import 'package:flutter/material.dart';
 
 class Tiket extends StatefulWidget {

@@ -1,9 +1,9 @@
-import 'package:eavell/PaketTravel.dart';
-import 'package:eavell/jadwalKapal.dart';
-import 'package:eavell/kuliner.dart';
-import 'package:eavell/penginapan.dart';
-import 'package:eavell/profil.dart';
-import 'package:eavell/wisata.dart';
+import 'package:TripNest/PaketTravel.dart';
+import 'package:TripNest/jadwalKapal.dart';
+import 'package:TripNest/kuliner.dart';
+import 'package:TripNest/penginapan.dart';
+import 'package:TripNest/profil.dart';
+import 'package:TripNest/wisata.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

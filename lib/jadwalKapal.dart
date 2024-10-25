@@ -1,5 +1,5 @@
-import 'package:eavell/beranda.dart';
-import 'package:eavell/tiket.dart';
+import 'package:TripNest/beranda.dart';
+import 'package:TripNest/tiket.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

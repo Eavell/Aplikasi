@@ -1,6 +1,6 @@
-// import 'package:eavell/beranda.dart';
-import 'package:eavell/beranda.dart';
-import 'package:eavell/deskripsi_paket.dart';
+// import 'package:TripNest/beranda.dart';
+import 'package:TripNest/beranda.dart';
+import 'package:TripNest/deskripsi_paket.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 

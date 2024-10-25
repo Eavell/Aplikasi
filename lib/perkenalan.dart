@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:eavell/masuk.dart';
+import 'package:TripNest/masuk.dart';
 import 'package:flutter/material.dart';
 
 class Perkenalan extends StatefulWidget {

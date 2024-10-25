@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DeskripsiPaketPage extends StatefulWidget {
   final String packageName;
@@ -27,12 +28,17 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
   bool isBookmarked = false;
   Map<String, dynamic> menu1Data = {};
   Map<String, dynamic> menu2Data = {};
+  String cp = '';
+  String linkcp = '';
+  String judul_cp = '';
 
   @override
   void initState() {
     super.initState();
     loadImagesFromFirebase(); // Memanggil method untuk load gambar
     loadData();
+    loadDataCP();
+    loadLinkCP();
   }
 
   Future<void> loadImagesFromFirebase() async {
@@ -57,6 +63,48 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
       });
     } catch (e) {
       print("Failed to load images: $e");
+    }
+  }
+
+  Future<void> loadDataCP() async {
+    try {
+      DocumentSnapshot cPSnapshot = await FirebaseFirestore.instance
+            .collection(widget.packageName)
+            .doc('contactPerson')
+            .get();
+
+      // Mengecek apakah data ada
+      if (cPSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          judul_cp = cPSnapshot.get('judul') ?? 'Judul tidak tersedia';
+          cp = cPSnapshot.get('cp') ?? '-';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> loadLinkCP() async {
+    try {
+      DocumentSnapshot kulinerSnapshot = await FirebaseFirestore.instance
+          .collection(widget.packageName)
+          .doc('contactPerson')
+          .get();
+
+      if (kulinerSnapshot.exists) {
+        setState(() {
+          linkcp = kulinerSnapshot.get('link_wa') ?? 'Link tidak tersedia';
+        });
+        print("Link WA: $linkcp"); // Menampilkan hasil di konsol
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching linkalamat: $e");
     }
   }
 
@@ -190,7 +238,47 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                       SizedBox(height: 20.0),
                       // Bagian 3 Hari / 2 Malam
                       Text(
-                        menu1Data['judul'] ?? 'Menu 1',  // Mengambil data dari menu1
+                        judul_cp,  // Pastikan judul_cp memiliki nilai default
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      InkWell(
+                        onTap: () async {
+                        if (linkcp.isNotEmpty) {
+                          final Uri url = Uri.parse(linkcp);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          } else {
+                            print('Tidak dapat membuka alamat ini');
+                          }
+                        }
+                      },
+                        child: Row(
+                          children: [
+                            // Gambar di sebelah kiri teks
+                            Image.asset(
+                              'assets/icon_wa.png', // Ganti dengan path gambar Anda
+                              width: 26.0,
+                              height: 26.0,
+                            ),
+                            SizedBox(width: 8.0), // Spasi antara gambar dan teks
+                            Text(
+                              cp.isNotEmpty ? cp : '-',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20.0),
+                      // Bagian 3 Hari / 2 Malam
+                      Text(
+                        menu1Data['judul'] ?? 'Menu 1',
                         style: TextStyle(
                           fontSize: 20.0,
                           fontWeight: FontWeight.bold,
@@ -206,7 +294,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                               child: Row(
                                 children: [
                                   Text(
-                                    '\u2022', // Bullet point
+                                    '\u2022',
                                     style: TextStyle(
                                       fontSize: 16.0,
                                       color: Colors.black87,
@@ -214,7 +302,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                                   ),
                                   SizedBox(width: 8.0),
                                   Text(
-                                    entry.value, // Menampilkan item dari menu1
+                                    entry.value,
                                     style: TextStyle(
                                       fontSize: 16.0,
                                       color: Colors.black87,
@@ -224,14 +312,14 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                               ),
                             );
                           } else {
-                            return SizedBox.shrink(); // Tidak menampilkan 'title'
+                            return SizedBox.shrink();
                           }
                         }).toList(),
                       ),
                       SizedBox(height: 20.0),
                       // Bagian Mencakup
                       Text(
-                        menu2Data['judul'] ?? 'Menu 2',  // Mengambil data dari menu1
+                        menu2Data['judul'] ?? 'Menu 2',
                         style: TextStyle(
                           fontSize: 20.0,
                           fontWeight: FontWeight.bold,
@@ -247,7 +335,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                               child: Row(
                                 children: [
                                   Text(
-                                    '\u2022', // Bullet point
+                                    '\u2022',
                                     style: TextStyle(
                                       fontSize: 16.0,
                                       color: Colors.black87,
@@ -255,7 +343,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                                   ),
                                   SizedBox(width: 8.0),
                                   Text(
-                                    entry.value, // Menampilkan item dari menu1
+                                    entry.value,
                                     style: TextStyle(
                                       fontSize: 16.0,
                                       color: Colors.black87,
@@ -265,17 +353,17 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                               ),
                             );
                           } else {
-                            return SizedBox.shrink(); // Tidak menampilkan 'title'
+                            return SizedBox.shrink();
                           }
                         }).toList(),
                       ),
-                      SizedBox(height: 30.0),  // Add space at the bottom
+                      SizedBox(height: 30.0),
                     ],
                   ),
                 ),
+
               ],
             ),
-
             //KOTAK PUTIH
             Positioned(
               top: 260.0,
@@ -341,44 +429,4 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
       ),
     );
   }
-
-  // //ATUR BAGIAN DESKRIPSI
-  // Widget menuItem(String name, String price) {
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(vertical: 4.0),
-  //     child: Row(
-  //       children: [
-  //         Text(
-  //           '\u2022', // Unicode for bullet
-  //           style: TextStyle(
-  //             fontSize: 16.0,
-  //             color: Colors.black87,
-  //           ),
-  //         ),
-  //         SizedBox(width: 8.0), // Add some spacing between bullet and text
-  //         Expanded(
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 name,
-  //                 style: TextStyle(
-  //                   fontSize: 16.0,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //               Text(
-  //                 price,
-  //                 style: TextStyle(
-  //                   fontSize: 16.0,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

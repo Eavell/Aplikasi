@@ -322,7 +322,7 @@ class _WisataPageState extends State<WisataPage> {
                                     'lokasi': lokasi,
                                     'imageUrl': images.isNotEmpty
                                         ? images[0]
-                                        : 'default_image_url',
+                                        : '',
                                   });
 
                                   // If the set operation is successful, update the state

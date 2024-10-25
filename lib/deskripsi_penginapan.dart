@@ -420,7 +420,7 @@ class _PenginapanPageState extends State<PenginapanPage> {
                                     'harga': harga,
                                     'imageUrl': images.isNotEmpty
                                         ? images[0]
-                                        : 'default_image_url',
+                                        : '',
                                   });
 
                                   // If the set operation is successful, update the state

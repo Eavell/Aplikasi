@@ -398,7 +398,7 @@ class _KulinerPageState extends State<KulinerPage> {
                                     'rating': rating,
                                     'imageUrl': images.isNotEmpty
                                         ? images[0]
-                                        : 'default_image_url',
+                                        : '',
                                   });
 
                                   // If the set operation is successful, update the state

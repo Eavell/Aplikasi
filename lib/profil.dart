@@ -335,9 +335,13 @@ class _ProfilPageState extends State<ProfilPage> {
                   var data = doc.data() as Map<String, dynamic>;
 
                   // Extract the fields safely
-                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String imageUrl = data['imageUrl'] ?? ''; 
                   String name = data['namaKuliner'] ?? 'Unnamed';
                   String location = data['lokasi'] ?? 'Unlocation';
+
+                  if (imageUrl.isEmpty || !Uri.tryParse(imageUrl)!.hasScheme == true) {
+                      imageUrl = 'assets/viewDefault.png'; // Ganti dengan path gambar default Anda
+                    }
 
                   return DestinationItem(
                     imageUrl: imageUrl,
@@ -386,11 +390,15 @@ class _ProfilPageState extends State<ProfilPage> {
                   var data = doc.data() as Map<String, dynamic>;
 
                   // Extract the fields safely
-                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String imageUrl = data['imageUrl'] ?? ''; 
                   String name = data['namaKuliner'] ?? 'Unnamed';
                   double rating =
                       double.tryParse(data['rating']?.toString() ?? '0.0') ??
                           0.0;
+
+                  if (imageUrl.isEmpty || !Uri.tryParse(imageUrl)!.hasScheme == true) {
+                      imageUrl = 'assets/viewDefault.png'; // Ganti dengan path gambar default Anda
+                    }
 
                   return CulinaryItem(
                     imageUrl: imageUrl,
@@ -440,12 +448,16 @@ class _ProfilPageState extends State<ProfilPage> {
                   var data = doc.data() as Map<String, dynamic>;
 
                   // Extract the fields safely
-                  String imageUrl = data['imageUrl'] ?? 'default_image_url';
+                  String imageUrl = data['imageUrl'] ?? ''; 
                   String name = data['namaPenginapan'] ?? 'Unnamed';
                   double rating =
                       double.tryParse(data['rating']?.toString() ?? '0.0') ??
                           0.0;
                   String price = data['harga'] ?? 'Rp0';
+
+                   if (imageUrl.isEmpty || !Uri.tryParse(imageUrl)!.hasScheme == true) {
+                      imageUrl = 'assets/viewDefault.png'; // Ganti dengan path gambar default Anda
+                    }
 
                   return AccommodationItem(
                     imageUrl: imageUrl,
@@ -555,8 +567,27 @@ class DestinationItem extends StatelessWidget {
                   topLeft: Radius.circular(8.0),
                   topRight: Radius.circular(8.0),
                 ),
-                child: Image.network(imageUrl,
-                    fit: BoxFit.cover, height: 160, width: double.infinity),
+                child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Image.asset(
+                          'assets/viewDefault.png', // Gambar default dari assets
+                          fit: BoxFit.cover,
+                          height: 160,
+                          width: double.infinity,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/viewDefault.png', // Gambar default jika imageUrl kosong
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                    ),
               ), // Menggunakan Image dari URL
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
@@ -654,8 +685,27 @@ class CulinaryItem extends StatelessWidget {
                   topLeft: Radius.circular(8.0),
                   topRight: Radius.circular(8.0),
                 ),
-                child: Image.network(imageUrl,
-                    fit: BoxFit.cover, height: 160, width: double.infinity),
+                child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Image.asset(
+                          'assets/viewDefault.png', // Gambar default dari assets
+                          fit: BoxFit.cover,
+                          height: 160,
+                          width: double.infinity,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/viewDefault.png', // Gambar default jika imageUrl kosong
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                    ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),
@@ -750,8 +800,27 @@ class AccommodationItem extends StatelessWidget {
                   topLeft: Radius.circular(8.0),
                   topRight: Radius.circular(8.0),
                 ),
-                child: Image.network(imageUrl,
-                    fit: BoxFit.cover, height: 160, width: double.infinity),
+                child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Image.asset(
+                          'assets/viewDefault.png', // Gambar default dari assets
+                          fit: BoxFit.cover,
+                          height: 160,
+                          width: double.infinity,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/viewDefault.png', // Gambar default jika imageUrl kosong
+                      fit: BoxFit.cover,
+                      height: 160,
+                      width: double.infinity,
+                    ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0),

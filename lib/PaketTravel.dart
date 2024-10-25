@@ -2,6 +2,7 @@
 import 'package:eavell/beranda.dart';
 import 'package:eavell/deskripsi_paket.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaketTravel extends StatefulWidget {
   const PaketTravel({super.key});
@@ -11,6 +12,82 @@ class PaketTravel extends StatefulWidget {
 }
 
 class _PaketTravelState extends State<PaketTravel> {
+  String hargaDiamond = '';
+  String hargaGold = '';
+  String hargaSilver = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadhargaDimaond();
+    loadhargaGold();
+    loadhargaSilver();
+  }
+
+  Future<void> loadhargaDimaond() async {
+    try {
+      DocumentSnapshot cPSnapshot = await FirebaseFirestore.instance
+            .collection('Paket Diamond')
+            .doc('deskripsi')
+            .get();
+
+      // Mengecek apakah data ada
+      if (cPSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          hargaDiamond = cPSnapshot.get('harga') ?? 'Judul tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> loadhargaGold() async {
+    try {
+      DocumentSnapshot cPSnapshot = await FirebaseFirestore.instance
+            .collection('Paket Gold')
+            .doc('deskripsi')
+            .get();
+
+      // Mengecek apakah data ada
+      if (cPSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          hargaGold = cPSnapshot.get('harga') ?? 'Judul tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> loadhargaSilver() async {
+    try {
+      DocumentSnapshot cPSnapshot = await FirebaseFirestore.instance
+            .collection('Paket Silver')
+            .doc('deskripsi')
+            .get();
+
+      // Mengecek apakah data ada
+      if (cPSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          hargaSilver = cPSnapshot.get('harga') ?? 'Judul tidak tersedia';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -65,7 +142,7 @@ class _PaketTravelState extends State<PaketTravel> {
               TravelPackageCard(
                 imagePath: 'assets/diamond.png',
                 packageName: 'Paket Diamond',
-                packagePrice: 'Rp 950.000 - Rp 1.600.000',
+                packagePrice: hargaDiamond,
                 screenWidth: screenWidth,
                 description: 'Deskripsi Paket Diamond',
               ),
@@ -73,7 +150,7 @@ class _PaketTravelState extends State<PaketTravel> {
               TravelPackageCard(
                 imagePath: 'assets/gold.png',
                 packageName: 'Paket Gold',
-                packagePrice: 'Rp 550.000 - Rp 950.000 ',
+                packagePrice: hargaGold,
                 screenWidth: screenWidth,
                 description: 'Deskripsi Paket Gold',
               ),
@@ -81,7 +158,7 @@ class _PaketTravelState extends State<PaketTravel> {
               TravelPackageCard(
                 imagePath: 'assets/silver.png',
                 packageName: 'Paket Silver',
-                packagePrice: 'Rp 250.000 - Rp 550.000',
+                packagePrice: hargaSilver,
                 screenWidth: screenWidth,
                 description: 'Deskripsi Paket Silver',
               ),

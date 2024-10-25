@@ -30,7 +30,6 @@ class _MasukState extends State<Masuk> {
 
   Future<String?> _getEmailFromName(String name) async {
     try {
-      // Cari pengguna di Firestore berdasarkan nama
       QuerySnapshot query = await FirebaseFirestore.instance
           .collection('users')
           .where('name', isEqualTo: name)
@@ -38,10 +37,8 @@ class _MasukState extends State<Masuk> {
           .get();
 
       if (query.docs.isNotEmpty) {
-        // Jika pengguna ditemukan, kembalikan email
         return query.docs.first['email'];
       } else {
-        // Jika pengguna tidak ditemukan
         return null;
       }
     } catch (e) {
@@ -52,17 +49,15 @@ class _MasukState extends State<Masuk> {
 
   Future<void> _loginWithEmailPassword() async {
     try {
-      String emailOrName = _emailController.text; // Bisa berupa email atau nama
+      // Normalisasi input sebelum login
+      String emailOrName = normalizeEmailOrUsername(_emailController.text);
       String? email;
 
-      // Cek apakah input adalah email dengan format valid
-      bool isEmail = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-          .hasMatch(emailOrName);
+      bool isEmail = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(emailOrName);
 
       if (isEmail) {
-        email = emailOrName; // Input adalah email
+        email = emailOrName;
       } else {
-        // Jika input adalah nama, cari email yang sesuai
         email = await _getEmailFromName(emailOrName);
 
         if (email == null) {
@@ -73,13 +68,11 @@ class _MasukState extends State<Masuk> {
         }
       }
 
-      // Lakukan login menggunakan email yang ditemukan atau diinputkan
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email!,
         password: _passwordController.text,
       );
 
-      // Jika login berhasil, navigasi ke halaman Beranda
       saveLoginStatus();
       Navigator.pushReplacement(
         context,
@@ -87,7 +80,6 @@ class _MasukState extends State<Masuk> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        // Tentukan pesan kesalahan manual berdasarkan kode kesalahan
         if (e.code == 'wrong-password') {
           _errorMessage = 'Kata sandi yang Anda masukkan salah.';
         } else if (e.code == 'user-not-found') {
@@ -103,14 +95,17 @@ class _MasukState extends State<Masuk> {
     }
   }
 
+  String normalizeEmailOrUsername(String input) {
+    return input.trim().toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Menggunakan CachedNetworkImage untuk background image
           Image.asset(
-            'assets/bg login.png', // Sesuaikan path gambar di assets
+            'assets/bg login.png',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
@@ -153,15 +148,12 @@ class _MasukState extends State<Masuk> {
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        labelText: _isemailFocused
-                            ? null
-                            : 'Masukkan Nama Atau Email Anda',
+                        labelText: _isemailFocused ? null : 'Masukkan Nama Atau Email Anda',
                         labelStyle: TextStyle(
                           color: Color(0xFFA0A1A8),
                         ),
                         alignLabelWithHint: true,
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 35.0, horizontal: 10),
+                        contentPadding: EdgeInsets.symmetric(vertical: 35.0, horizontal: 10),
                         fillColor: Colors.white,
                         filled: true,
                         enabledBorder: OutlineInputBorder(
@@ -203,9 +195,7 @@ class _MasukState extends State<Masuk> {
                       controller: _passwordController,
                       obscureText: _isObscure,
                       decoration: InputDecoration(
-                        labelText: _isPasswordFocused
-                            ? null
-                            : 'Masukkan Kata Sandi Anda',
+                        labelText: _isPasswordFocused ? null : 'Masukkan Kata Sandi Anda',
                         labelStyle: TextStyle(
                           color: Color(0xFFA0A1A8),
                         ),

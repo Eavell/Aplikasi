@@ -131,12 +131,12 @@ class _JadwalKapalState extends State<JadwalKapal> {
 
               // Mendapatkan data untuk card 3
               String date3 = document['date3'] ?? 'Tanggal Tidak Diketahui';
-              String image3 = document['image3'] ; // Gambar default
+              String image3 = document['image1'] ; // Gambar default
               String schedule3 = document['schedule3'] ?? 'Jadwal Tidak Diketahui';
 
               // Mendapatkan data untuk card 4
               String date4 = document['date4'] ?? 'Tanggal Tidak Diketahui';
-              String image4 = document['image4'] ; // Gambar default
+              String image4 = document['image2'] ; // Gambar default
               String schedule4 = document['schedule4'] ?? 'Jadwal Tidak Diketahui';
 
               // Mengembalikan beberapa card dalam Column

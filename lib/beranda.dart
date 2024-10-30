@@ -29,15 +29,6 @@ class _BerandaState extends State<Beranda> {
   String searchText = "";
   final FocusNode _focusNode = FocusNode(); // FocusNode untuk TextField
 
-  final CollectionReference _culinaryCollection =
-      FirebaseFirestore.instance.collection('deskripsi_kuliner');
-
-  final CollectionReference _accommodationCollection =
-      FirebaseFirestore.instance.collection('deskripsi_penginapan');
-
-  final CollectionReference _destinationCollection =
-      FirebaseFirestore.instance.collection('deskripsi_wisata');
-
   @override
   void dispose() {
     // Dispose controller yang benar

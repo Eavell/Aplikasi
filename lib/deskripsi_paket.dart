@@ -269,7 +269,7 @@ class _DeskripsiPaketPageState extends State<DeskripsiPaketPage> {
                               cp.isNotEmpty ? cp : '-',
                               style: TextStyle(
                                 fontSize: 16.0,
-                                color: Colors.black54,
+                                color: Colors.black,
                               ),
                             ),
                           ],

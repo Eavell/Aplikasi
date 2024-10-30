@@ -23,6 +23,8 @@ class _KulinerPageState extends State<KulinerPage> {
   String harga = '';
   List<String> jamBukaItems = [];
   List<String> menumakan = [];
+  String cp = '';
+  String linkcp = '';
 
   int currentPage = 0;
   bool isBookmarked = false;
@@ -132,12 +134,16 @@ class _KulinerPageState extends State<KulinerPage> {
       if (kulinerData.exists) {
         setState(() {
           menumakan = [];
-          for (int i = 1; i <= 10; i++) {
-            String fieldName = 'menu_$i';
-            String? menu = kulinerData.get(fieldName);
-            if (menu != null) {
-              menumakan.add(menu); // Simpan menu dalam format String
-            }
+          // Konversi `kulinerData.data()` ke `Map<String, dynamic>`
+          Map<String, dynamic>? data = kulinerData.data() as Map<String, dynamic>?;
+
+          // Pastikan data tidak null sebelum memanggil `forEach`
+          if (data != null) {
+            data.forEach((key, value) {
+              if (key.startsWith('menu_') && value != null) {
+                menumakan.add(value as String); // Simpan nilai fasilitas
+              }
+            });
           }
         });
       }
@@ -176,6 +182,47 @@ class _KulinerPageState extends State<KulinerPage> {
     }
   }
 
+  Future<void> loadDataCP() async {
+    try {
+      DocumentSnapshot cPSnapshot = await FirebaseFirestore.instance
+            .collection('deskripsi_penginapan')
+            .doc(widget.namaKuliner)
+            .get();
+
+      // Mengecek apakah data ada
+      if (cPSnapshot.exists) {
+        setState(() {
+          // Ambil data field 'alamat', 'rating', dan 'harga'
+          cp = cPSnapshot.get('cp') ?? '-';
+        });
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+  Future<void> loadLinkCP() async {
+    try {
+      DocumentSnapshot linkcPSnapshot = await FirebaseFirestore.instance
+          .collection('deskripsi_kuliner')
+          .doc(widget.namaKuliner)
+          .get();
+
+      if (linkcPSnapshot.exists) {
+        setState(() {
+          linkcp = linkcPSnapshot.get('link_wa') ?? 'Link tidak tersedia';
+        });
+        print("Link WA: $linkcp"); // Menampilkan hasil di konsol
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print("Error fetching linkalamat: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,284 +232,364 @@ class _KulinerPageState extends State<KulinerPage> {
     loadImagesFromFirebase();
     checkBookmarkStatus();
     loadLinkAlamat();
+    loadDataCP();
+    loadLinkCP();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Stack(
+  return Scaffold(
+    backgroundColor: Colors.white,
+    body: Stack(
+      children: [
+        // Bagian yang bisa di-scroll
+        SingleChildScrollView(
+          padding: EdgeInsets.only(top: 320.0), 
+          child: Padding(// Ruang untuk gambar dan kotak putih di bagian atas
+                padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 300.0,
-                      child: PageView(
-                        controller: _pageController,
-                        onPageChanged: (int page) {
-                          setState(() {
-                            currentPage = page;
-                          });
-                        },
-                        children: images.map((image) {
-                          return Container(
+                    SizedBox(height: 80.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.location_on, color: Colors.black54),
+                        SizedBox(width: 4.0),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              if (linkalamat.isNotEmpty) {
+                                final Uri url = Uri.parse(linkalamat);
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url);
+                                } else {
+                                  print('Tidak dapat membuka alamat ini');
+                                }
+                              }
+                            },
+                            child: Text(
+                              alamat.isNotEmpty ? alamat : 'Alamat tidak tersedia',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20.0),
+                    Text(
+                      'Jam Buka',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: jamBukaItems.map((menu) {
+                        var parts = menu.split(', ');
+                        var menuName = parts[0];
+                        var price = parts.length > 1 ? parts[1] : '...';
+                        return menuItem(menuName, price);
+                      }).toList(),
+                    ),
+                    SizedBox(height: 20.0),
+                    Text(
+                      'Menu',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: menumakan.map((menu) {
+                        var parts = menu.split(', ');
+                        var menuName = parts[0];
+                        var price = parts.length > 1 ? parts[1] : 'Rp ...';
+                        return menuItem(menuName, price);
+                      }).toList(),
+                    ),
+                    SizedBox(height: 20.0),
+                    Text(
+                      'Narahubung',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    InkWell(
+                      onTap: () async {
+                        if (linkcp.isNotEmpty) {
+                          final Uri url = Uri.parse(linkcp);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          } else {
+                            print('Tidak dapat membuka alamat ini');
+                          }
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/icon_wa.png',
+                            width: 26.0,
+                            height: 26.0,
+                          ),
+                          SizedBox(width: 8.0),
+                          Text(
+                            cp.isNotEmpty ? cp : '-',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 30.0),
+                  ],
+                ),
+              ),
+        ),
+        // Bagian gambar (tidak di-scroll)
+        Column(
+          children: [
+            Stack(
+                children: [
+                  Container(
+                    height: 300.0,
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (int page) {
+                        setState(() {
+                          currentPage = page;
+                        });
+                      },
+                      children: images.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        String image = entry.value;
+                        return GestureDetector(
+                          onTap: () {
+                            PageController _dialogPageController = PageController(initialPage: index);
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    child: Container(
+                                      height: 400.0,
+                                      child: PageView(
+                                        controller: _dialogPageController,
+                                        children: images.map((image) {
+                                          return Container(
+                                            margin: EdgeInsets.all(2.0),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10.0),
+                                              image: DecorationImage(
+                                                image: NetworkImage(image),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
                             decoration: BoxDecoration(
                               image: DecorationImage(
                                 image: NetworkImage(image),
                                 fit: BoxFit.cover,
                               ),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    IgnorePointer(
-                      child: Container(
-                        height: 310.0,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.white,
-                            ],
-                            stops: [0.6, 1.0],
                           ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  IgnorePointer(
+                    child: Container(
+                      height: 310.0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.white,
+                          ],
+                          stops: [0.6, 1.0],
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 80.0),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  // Indikator gambar
+                  Positioned(
+                    bottom: 65.0,
+                    right: 20.0,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[700],
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Colors.black54),
-                          SizedBox(width: 4.0),
-                          Expanded(
-                            child: InkWell( // Gunakan InkWell agar teks bisa ditekan
-                              onTap: () async {
-                                // Cek apakah alamat valid dan buat Uri
-                                if (linkalamat.isNotEmpty) {
-                                  final Uri url = Uri.parse(linkalamat); // Gunakan Uri untuk URL
-                                  // Cek apakah bisa meluncurkan URL dengan launchUrl
-                                  if (await canLaunchUrl(url)) {
-                                    await launchUrl(url); // Luncurkan Google Maps dengan alamat
-                                  } else {
-                                    print('Tidak dapat membuka alamat ini');
-                                  }
-                                }
-                              },
-                              child: Text(
-                                alamat.isNotEmpty ? alamat : 'Alamat tidak tersedia',
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  color: Colors.black54, // Ubah warna teks menjadi biru seperti link
-                                ),
-                              ),
+                          Icon(
+                            Icons.image,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 8.0),
+                          Text(
+                            '${currentPage + 1} / ${images.length}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20.0),
-                      Text(
-                        'Jam Buka',
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8.0),
-                      // Menampilkan jam buka dari Firestore
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: jamBukaItems.map((menu) {
-                          // Split the menu string into name and price
-                          var parts = menu.split(', ');
-                          var menuName = parts[0];
-                          var price = parts.length > 1 ? parts[1] : '...'; // Default price if not available
-                          return menuItem(menuName, price);
-                        }).toList(),
-                      ),
-                      SizedBox(height: 20.0),
-                      Text(
-                        'Menu',
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8.0),
-                      // Menampilkan menu dari Firestore
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: menumakan.map((menu) {
-                          // Split the menu string into name and price
-                          var parts = menu.split(', ');
-                          var menuName = parts[0];
-                          var price = parts.length > 1 ? parts[1] : 'Rp ...'; // Default price if not available
-                          return menuItem(menuName, price);
-                        }).toList(),
-                      ),
-                      SizedBox(height: 30.0),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+          ],
+        ),
+        // Kotak putih tetap pada posisi teratas
+        Positioned(
+          top: 260.0,
+          left: 40.0,
+          right: 40.0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8.0,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
-
-            // KOTAK PUTIH
-            Positioned(
-              top: 260.0,
-              left: 40.0,
-              right: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 8.0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.namaKuliner, // Menampilkan nama kuliner yang dikirim
-                            style: TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            softWrap: true,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Expanded(
+                      child: Text(
+                        widget.namaKuliner,
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.w600,
                         ),
-
-                        // TOMBOL SIMPAN
-                        IconButton(
-                          icon: Icon(
-                            Icons.bookmark,
-                            size: 32,
-                            color: isBookmarked
-                                ? Colors.pink
-                                : Colors
-                                    .grey, // Bookmark color based on the state
-                          ),
-                          onPressed: () async {
-                            // Get the current logged-in user
-                            User? user = FirebaseAuth.instance.currentUser;
-
-                            if (user != null) {
-                              String uid =
-                                  user.uid; // Get the UID of the logged-in user
-
-                              // Firestore reference to the user's bookmarks collection
-                              final bookmarkRef = FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(uid)
-                                  .collection('bookmarksKuliner')
-                                  .doc(widget.namaKuliner);
-
-                              try {
-                                if (isBookmarked) {
-                                  // If the item is already bookmarked, remove it from Firestore
-                                  await bookmarkRef.delete();
-
-                                  // If the delete operation is successful, update the state
-                                  setState(() {
-                                    isBookmarked = false;
-                                  });
-                                } else {
-                                  // If the item is not bookmarked, add it to Firestore
-                                  await bookmarkRef.set({
-                                    'namaKuliner': widget.namaKuliner,
-                                    'rating': rating,
-                                    'imageUrl': images.isNotEmpty
-                                        ? images[0]
-                                        : '',
-                                  });
-
-                                  // If the set operation is successful, update the state
-                                  setState(() {
-                                    isBookmarked = true;
-                                  });
-                                }
-                              } catch (e) {
-                                // Handle error (e.g., show a Snackbar or print an error message)
-                                print("Error updating bookmark: $e");
-                              }
-                            } else {
-                              // Handle the case when the user is not logged in
-                              print("User not logged in");
-                            }
-                          },
-                        ),
-                      ],
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    SizedBox(height: 8.0),
-                    Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amber),
-                        SizedBox(width: 4.0),
-                        Text(
-                          rating.isNotEmpty
-                                  ? rating
-                                  : '0.0',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          harga.isNotEmpty
-                                  ? harga
-                                  : 'Rp0',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                          ),
-                        ),
-                      ],
+                    IconButton(
+                      icon: Icon(
+                        Icons.bookmark,
+                        size: 32,
+                        color: isBookmarked ? Colors.pink : Colors.grey,
+                      ),
+                      onPressed: () async {
+                        User? user = FirebaseAuth.instance.currentUser;
+
+                        if (user != null) {
+                          String uid = user.uid;
+
+                          final bookmarkRef = FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .collection('bookmarksKuliner')
+                              .doc(widget.namaKuliner);
+
+                          try {
+                            if (isBookmarked) {
+                              await bookmarkRef.delete();
+                              setState(() {
+                                isBookmarked = false;
+                              });
+                            } else {
+                              await bookmarkRef.set({
+                                'namaKuliner': widget.namaKuliner,
+                                'rating': rating,
+                                'imageUrl': images.isNotEmpty ? images[0] : '',
+                              });
+                              setState(() {
+                                isBookmarked = true;
+                              });
+                            }
+                          } catch (e) {
+                            print("Error updating bookmark: $e");
+                          }
+                        } else {
+                          print("User not logged in");
+                        }
+                      },
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: 8.0),
+                Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber),
+                    SizedBox(width: 4.0),
+                    Text(
+                      rating.isNotEmpty ? rating : '0.0',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                      ),
+                    ),
+                    Spacer(),
+                    Text(
+                      harga.isNotEmpty ? harga : 'Rp0',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-
-            // TOMBOL KEMBALI
-            Positioned(
-              top: 40.0,
-              left: 16.0,
-              child: IconButton(
-                icon: Image.asset('assets/tombol_kembali.png'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+
+        // TOMBOL KEMBALI
+        Positioned(
+          top: 40.0,
+          left: 16.0,
+          child: IconButton(
+            icon: Image.asset('assets/tombol_kembali.png'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   // ATUR BAGIAN DESKRIPSI
   Widget menuItem(String name, String price) {
